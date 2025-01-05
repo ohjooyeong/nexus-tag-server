@@ -20,7 +20,6 @@ export class WorkspaceController {
 
   @Post()
   create(@Body() createWorkspaceDto: CreateWorkspaceDto) {
-    console.log('CREATE');
     return this.workspaceService.create(createWorkspaceDto);
   }
 

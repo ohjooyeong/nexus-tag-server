@@ -1,5 +1,6 @@
 import { Workspace } from 'src/workspace/entities/workspace.entity';
 import {
+  BaseEntity,
   Column,
   CreateDateColumn,
   Entity,
@@ -8,7 +9,7 @@ import {
 } from 'typeorm';
 
 @Entity()
-export class Project {
+export class Project extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 

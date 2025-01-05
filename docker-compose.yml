@@ -22,6 +22,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: nexus-tag-server
+    env_file:
+      - .env
     ports:
       - '8080:8080'
     depends_on:

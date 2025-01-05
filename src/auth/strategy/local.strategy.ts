@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
 import { AuthService } from '../auth.service';
@@ -12,10 +16,24 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(email: string, password: string) {
-    const user = await this.authService.validateUser(email, password);
+    if (!email || !password) {
+      throw new BadRequestException('Email and password must be provided.');
+    }
+
+    let user;
+    try {
+      user = await this.authService.validateUser(email, password);
+    } catch (error) {
+      throw new UnauthorizedException('Failed to validate user credentials.');
+    }
 
     if (!user) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('Invalid email or password.');
+    }
+
+    // Additional checks (optional)
+    if (user.status !== 'ACTIVE') {
+      throw new UnauthorizedException('User account is not active.');
     }
 
     return user;

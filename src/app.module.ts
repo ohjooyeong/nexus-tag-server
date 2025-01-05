@@ -11,12 +11,17 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { User } from './user/entities/user.entity';
 import { ProfileModule } from './profile/profile.module';
+import { ConfigModule } from '@nestjs/config';
+import { Profile } from './profile/entities/profile.entity';
 
 @Module({
   imports: [
     LoggerModule.forRoot(),
     WorkspaceModule,
     ProjectModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'postgres',
@@ -25,7 +30,7 @@ import { ProfileModule } from './profile/profile.module';
       password: 'postgres',
       database: 'postgres',
       synchronize: true, // production 때는 false
-      entities: [Workspace, Project, User],
+      entities: [Workspace, Project, User, Profile],
     }),
     AuthModule,
     UserModule,

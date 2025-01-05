@@ -1,6 +1,7 @@
 import { Exclude } from 'class-transformer';
 import { Profile } from 'src/profile/entities/profile.entity';
 import {
+  BaseEntity,
   Column,
   CreateDateColumn,
   Entity,
@@ -12,7 +13,7 @@ import {
 } from 'typeorm';
 
 @Entity()
-export class User {
+export class User extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -23,8 +24,8 @@ export class User {
   @Column({ type: 'varchar', comment: '유저 이름' })
   username: string;
 
-  @Column({ type: 'tinyint', comment: '유저 나이' })
-  age: number;
+  @Column({ type: 'date', comment: '유저 생일', nullable: true })
+  birth_date: Date | null;
 
   @Exclude()
   @Column({ type: 'varchar' })
@@ -44,7 +45,7 @@ export class User {
    * @OneToOne -> 해당 엔티티(User) To 대상 엔티티(Profile)
    *              하나의 유저는 하나의 개인정보를 갖는다.
    */
-  @OneToOne(() => Profile)
-  @JoinColumn({ name: 'profile_id' })
+  @OneToOne(() => Profile, { cascade: true, eager: true })
+  @JoinColumn({ name: 'profile' })
   profile: Profile;
 }

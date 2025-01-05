@@ -1,5 +1,6 @@
 import { Project } from 'src/project/entities/project.entity';
 import {
+  BaseEntity,
   Column,
   CreateDateColumn,
   Entity,
@@ -10,7 +11,7 @@ import {
 } from 'typeorm';
 
 @Entity()
-export class Workspace {
+export class Workspace extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
