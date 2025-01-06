@@ -1,11 +1,11 @@
-import { Exclude } from 'class-transformer';
+import { User } from 'src/user/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-  VersionColumn,
 } from 'typeorm';
 
 //Enum 설정
@@ -19,14 +19,6 @@ export class Profile {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({
-    type: 'varchar',
-    length: 50,
-    comment: '유저 권한(Ex: 관리자, 일반 유저 등등)',
-    default: 'USER',
-  })
-  role: string;
-
   @Column({ type: 'varchar', comment: '유저 이미지', default: null })
   profile_img: string | null;
 
@@ -39,11 +31,11 @@ export class Profile {
   status: string;
 
   @CreateDateColumn({ comment: '생성일' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ comment: '수정일' })
-  updated_at: Date;
+  updatedAt: Date;
 
-  @VersionColumn({ comment: '버전' })
-  version: number;
+  @OneToOne(() => User, (user) => user.profile)
+  user: User;
 }

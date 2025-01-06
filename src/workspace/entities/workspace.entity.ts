@@ -4,11 +4,20 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
   VersionColumn,
 } from 'typeorm';
+import { WorkspaceMember } from './workspace-member.entity';
+import { User } from 'src/user/entities/user.entity';
+
+export enum Plan {
+  FREE = 'FREE',
+  ADVANCED = 'ADVANCED',
+  ENTERPRISE = 'ENTERPRISE',
+}
 
 @Entity()
 export class Workspace extends BaseEntity {
@@ -21,22 +30,31 @@ export class Workspace extends BaseEntity {
   @Column()
   description: string;
 
-  // @Column()
-  // plan: string;
+  @Column({
+    type: 'enum',
+    enum: Plan,
+    default: Plan.FREE,
+    comment: '워크스페이스 지불 플랜',
+  })
+  plan: string;
 
-  // @Column()
-  // users: string;
+  @ManyToOne(() => User, (user) => user.ownedWorkspaces, { nullable: false })
+  owner: User;
 
-  // // Project와 엔티티 사이의 관계 설정
-  // @OneToMany(() => Project, (project) => project.workspace)
-  // projects: Project[];
+  @OneToMany(
+    () => WorkspaceMember,
+    (workspaceMember) => workspaceMember.workspace,
+    { cascade: true },
+  )
+  members: WorkspaceMember[];
+
+  // Project와 엔티티 사이의 관계 설정
+  @OneToMany(() => Project, (project) => project.workspace)
+  projects: Project[];
 
   @CreateDateColumn()
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn()
-  updated_at: Date;
-
-  @VersionColumn()
-  version: number;
+  updatedAt: Date;
 }

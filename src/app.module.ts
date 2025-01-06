@@ -13,6 +13,8 @@ import { User } from './user/entities/user.entity';
 import { ProfileModule } from './profile/profile.module';
 import { ConfigModule } from '@nestjs/config';
 import { Profile } from './profile/entities/profile.entity';
+import { Invitation } from './workspace/entities/invitation.entity';
+import { WorkspaceMember } from './workspace/entities/workspace-member.entity';
 
 @Module({
   imports: [
@@ -30,7 +32,14 @@ import { Profile } from './profile/entities/profile.entity';
       password: 'postgres',
       database: 'postgres',
       synchronize: true, // production 때는 false
-      entities: [Workspace, Project, User, Profile],
+      entities: [
+        Workspace,
+        Project,
+        User,
+        Profile,
+        Invitation,
+        WorkspaceMember,
+      ],
     }),
     AuthModule,
     UserModule,

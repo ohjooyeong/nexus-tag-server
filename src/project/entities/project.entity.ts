@@ -6,6 +6,7 @@ import {
   Entity,
   ManyToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
@@ -19,15 +20,15 @@ export class Project extends BaseEntity {
   @Column()
   description: string;
 
-  // @Column()
-  // owner: string;
+  @Column()
+  content_type: string;
 
-  // @Column()
-  // content_type: string;
+  @ManyToOne(() => Workspace, (workspace) => workspace.projects)
+  workspace: Workspace;
 
-  // @ManyToOne(() => Workspace, (workspace) => workspace.projects)
-  // workspace: Workspace;
+  @CreateDateColumn({ comment: '생성일' })
+  createdAt: Date;
 
-  @CreateDateColumn()
-  created_at: Date;
+  @UpdateDateColumn({ comment: '수정일' })
+  updatedAt: Date;
 }
