@@ -8,7 +8,6 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
-  ManyToOne,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -29,6 +28,9 @@ export class User extends BaseEntity {
 
   @Column({ type: 'date', comment: '유저 생일', nullable: true })
   birthDate: Date | null;
+
+  @Column({ type: 'boolean', default: false })
+  emailVerified: boolean;
 
   @Exclude()
   @Column({ type: 'varchar' })

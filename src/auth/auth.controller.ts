@@ -6,7 +6,6 @@ import { CurrentUser } from './current-user.decorator';
 import { User } from 'src/user/entities/user.entity';
 import { Response } from 'express';
 import { JwtAuthGuard } from './guard/jwt.guard';
-import { Profile } from 'src/profile/entities/profile.entity';
 
 @Controller('auth')
 export class AuthController {
@@ -24,29 +23,20 @@ export class AuthController {
     return data;
   }
 
+  @Post('logout')
+  async logout(@Res({ passthrough: true }) response: Response) {
+    await this.authService.logout(response);
+    return { message: 'Successfully logged out' };
+  }
+
   @Post('register')
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
-  }
-
-  @Get()
-  @UseGuards(JwtAuthGuard)
-  async getUser(@CurrentUser() user: User) {
-    return user;
   }
 
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   async getUserWithProfile(@CurrentUser() user: User) {
     return this.authService.getUserWithProfile({ id: user.id });
-  }
-
-  @Post('profile')
-  @UseGuards(JwtAuthGuard)
-  async setUserProfile(
-    @CurrentUser() user: any, // 인증된 사용자 정보
-    @Body() profileData: Partial<Profile>,
-  ) {
-    return this.authService.setUserProfile(user.id, profileData);
   }
 }

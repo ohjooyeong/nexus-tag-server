@@ -19,8 +19,6 @@ import { WorkspaceMember } from './workspace/entities/workspace-member.entity';
 @Module({
   imports: [
     LoggerModule.forRoot(),
-    WorkspaceModule,
-    ProjectModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -41,6 +39,8 @@ import { WorkspaceMember } from './workspace/entities/workspace-member.entity';
         WorkspaceMember,
       ],
     }),
+    WorkspaceModule,
+    ProjectModule,
     AuthModule,
     UserModule,
     ProfileModule,

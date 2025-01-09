@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Injectable,
   NotFoundException,
   UnprocessableEntityException,
@@ -14,15 +13,26 @@ import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 import { GetUserDto } from './dto/get-user.dto';
 import { instanceToPlain } from 'class-transformer';
-import { Profile } from 'src/profile/entities/profile.entity';
+
+import { Workspace } from 'src/workspace/entities/workspace.entity';
+import { Project } from 'src/project/entities/project.entity';
+import {
+  Role,
+  WorkspaceMember,
+} from 'src/workspace/entities/workspace-member.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    @InjectRepository(Profile)
-    private readonly profileRepository: Repository<Profile>,
+    @InjectRepository(Workspace)
+    private readonly workspaceRepository: Repository<Workspace>,
+    @InjectRepository(Project)
+    private readonly projectRepository: Repository<Project>,
+    @InjectRepository(WorkspaceMember)
+    private readonly workspaceMemberRepository: Repository<WorkspaceMember>,
+
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
@@ -58,7 +68,7 @@ export class AuthService {
     return { access_token: token };
   }
 
-  async register(registerDto: RegisterDto): Promise<User> {
+  async register(registerDto: RegisterDto) {
     const existingEmail = await this.userRepository.findOneBy({
       email: registerDto.email,
     });
@@ -69,13 +79,44 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
 
-    const newUser = this.userRepository.save({
+    const createUser = this.userRepository.create({
       ...registerDto,
       password: hashedPassword,
     });
 
-    return newUser;
+    const savedUser = await this.userRepository.save(createUser);
+
+    // 2. 기본 워크스페이스 생성
+    const workspace = this.workspaceRepository.create({
+      name: 'Default Workspace',
+      description: 'This is a built-in workspace.',
+      owner: savedUser,
+    });
+
+    // 3. 기본 프로젝트 생성
+    const project = this.projectRepository.create({
+      name: 'Default Project',
+      workspace,
+    });
+    workspace.projects = [project];
+
+    // 4. 워크스페이스 멤버 생성
+    const workspaceMember = this.workspaceMemberRepository.create({
+      workspace,
+      user: savedUser,
+      role: Role.OWNER, // 소유자는 기본적으로 OWNER
+    });
+    workspace.members = [workspaceMember];
+
+    await this.workspaceRepository.save(workspace);
+
+    return instanceToPlain(savedUser);
   }
+
+  async logout(response: Response): Promise<void> {
+    response.clearCookie('Authentication', { httpOnly: true });
+  }
+
   async getUser(getUserDto: GetUserDto) {
     return instanceToPlain(
       this.userRepository.findOneBy({ id: getUserDto.id }),
@@ -95,32 +136,5 @@ export class AuthService {
     // password를 exclude 했는데 password가 나오는 현상때문에
     // instanceToPlain 메서드를 활용함.
     return instanceToPlain(user);
-  }
-
-  async setUserProfile(userId: string, profileData: Partial<Profile>) {
-    const user = await this.userRepository.findOne({
-      where: { id: userId },
-      relations: ['profile'],
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    let profile = user.profile;
-
-    if (profile) {
-      // Update existing profile
-      profile = { ...profile, ...profileData };
-    } else {
-      // Create new profile
-      profile = this.profileRepository.create(profileData);
-    }
-
-    const savedProfile = await this.profileRepository.save(profile);
-    user.profile = savedProfile;
-    await this.userRepository.save(user);
-
-    return savedProfile;
   }
 }

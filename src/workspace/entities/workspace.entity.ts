@@ -8,7 +8,6 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-  VersionColumn,
 } from 'typeorm';
 import { WorkspaceMember } from './workspace-member.entity';
 import { User } from 'src/user/entities/user.entity';
@@ -36,7 +35,7 @@ export class Workspace extends BaseEntity {
     default: Plan.FREE,
     comment: '워크스페이스 지불 플랜',
   })
-  plan: string;
+  plan: Plan;
 
   @ManyToOne(() => User, (user) => user.ownedWorkspaces, { nullable: false })
   owner: User;
@@ -49,7 +48,7 @@ export class Workspace extends BaseEntity {
   members: WorkspaceMember[];
 
   // Project와 엔티티 사이의 관계 설정
-  @OneToMany(() => Project, (project) => project.workspace)
+  @OneToMany(() => Project, (project) => project.workspace, { cascade: true })
   projects: Project[];
 
   @CreateDateColumn()

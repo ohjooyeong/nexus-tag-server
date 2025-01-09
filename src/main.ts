@@ -17,6 +17,12 @@ async function bootstrap() {
       },
     }),
   );
+
+  app.enableCors({
+    origin: ['http://localhost:3000'],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true, // 쿠키 전송 허용
+  });
   await app.listen(8080);
 }
 bootstrap();

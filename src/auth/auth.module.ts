@@ -8,11 +8,20 @@ import { JwtModule } from '@nestjs/jwt';
 import { LocalStrategy } from './strategy/local.strategy';
 import { JwtStrategy } from './strategy/jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { Workspace } from 'src/workspace/entities/workspace.entity';
+import { Project } from 'src/project/entities/project.entity';
+import { WorkspaceMember } from 'src/workspace/entities/workspace-member.entity';
 import { Profile } from 'src/profile/entities/profile.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Profile]),
+    TypeOrmModule.forFeature([
+      User,
+      Workspace,
+      Project,
+      WorkspaceMember,
+      Profile,
+    ]),
     PassportModule,
     ConfigModule.forRoot({
       isGlobal: true,

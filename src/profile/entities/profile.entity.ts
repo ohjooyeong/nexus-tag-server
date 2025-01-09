@@ -20,7 +20,7 @@ export class Profile {
   id: string;
 
   @Column({ type: 'varchar', comment: '유저 이미지', default: null })
-  profile_img: string | null;
+  profileImg: string | null;
 
   @Column({
     type: 'enum',
