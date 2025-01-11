@@ -27,7 +27,7 @@ export class User extends BaseEntity {
   username: string;
 
   @Column({ type: 'date', comment: '유저 생일', nullable: true })
-  birthDate: Date | null;
+  birthdate: Date | null;
 
   @Column({ type: 'boolean', default: false })
   emailVerified: boolean;
