@@ -1,5 +1,7 @@
 import {
   BadRequestException,
+  HttpException,
+  HttpStatus,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -34,8 +36,15 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     }
 
     // Additional checks (optional)
-    if (user.status !== 'ACTIVE') {
-      throw new UnauthorizedException('User account is not active.');
+    if (!user.emailVerified) {
+      throw new HttpException(
+        {
+          statusCode: 450,
+          message: 'Please verify your email before proceeding.',
+          data: user.email,
+        },
+        450,
+      );
     }
 
     return user;

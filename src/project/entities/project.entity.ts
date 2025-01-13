@@ -9,6 +9,11 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+export enum CONTENT_TYPE {
+  IMAGE = 'IMAGE',
+  VIDEO = 'VIDEO',
+}
+
 @Entity()
 export class Project extends BaseEntity {
   @PrimaryGeneratedColumn()
@@ -20,8 +25,13 @@ export class Project extends BaseEntity {
   @Column()
   description: string;
 
-  @Column()
-  content_type: string;
+  @Column({
+    type: 'enum',
+    enum: CONTENT_TYPE,
+    default: CONTENT_TYPE.IMAGE,
+    comment: '컨텐츠 타입',
+  })
+  content_type: CONTENT_TYPE;
 
   @ManyToOne(() => Workspace, (workspace) => workspace.projects)
   workspace: Workspace;

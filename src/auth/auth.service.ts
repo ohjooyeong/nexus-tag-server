@@ -1,11 +1,13 @@
 import {
+  BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { RegisterDto } from './dto/register.dto';
@@ -32,6 +34,8 @@ export class AuthService {
     private readonly projectRepository: Repository<Project>,
     @InjectRepository(WorkspaceMember)
     private readonly workspaceMemberRepository: Repository<WorkspaceMember>,
+
+    private readonly dataSource: DataSource,
 
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
@@ -79,38 +83,101 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
 
-    const createUser = this.userRepository.create({
-      ...registerDto,
-      password: hashedPassword,
+    // 트랜잭션 사용
+    return await this.dataSource.transaction(async (manager) => {
+      try {
+        // SRP에 따라 메서드 분리함.
+        // 중간에 예외가 발생하면 데이터가 저장되지 않게 만듬.
+        // 데이터를 save 하지않으면 각 관계에 대한 ID가 만들어지지 않아서 오류가 발생함.
+        const user = await this.createUser(
+          manager,
+          registerDto,
+          hashedPassword,
+        );
+
+        const workspace = await this.createDefaultWorkspace(manager, user);
+
+        await this.createDefaultProject(manager, workspace);
+
+        await this.createWorkspaceMember(manager, user, workspace);
+
+        return instanceToPlain(user);
+      } catch (error) {
+        if (error instanceof UnprocessableEntityException) {
+          throw error;
+        }
+
+        // 데이터베이스 에러
+        if (error.code === '23505') {
+          // PostgreSQL 고유 키 중복 에러 코드
+          throw new BadRequestException('Duplicate data detected');
+        }
+
+        console.error('Unexpected error during registration:', error);
+        throw new InternalServerErrorException('An unexpected error occurred');
+      }
     });
+  }
 
-    const savedUser = await this.userRepository.save(createUser);
+  private async createUser(
+    manager,
+    registerDto: RegisterDto,
+    hashedPassword: string,
+  ) {
+    try {
+      const user = this.userRepository.create({
+        ...registerDto,
+        password: hashedPassword,
+      });
+      return await manager.save(user);
+    } catch (error) {
+      console.error('Error creating user:', error);
+      throw new InternalServerErrorException('Failed to create user');
+    }
+  }
 
-    // 2. 기본 워크스페이스 생성
-    const workspace = this.workspaceRepository.create({
-      name: 'Default Workspace',
-      description: 'This is a built-in workspace.',
-      owner: savedUser,
-    });
+  private async createDefaultWorkspace(manager, user) {
+    try {
+      const workspace = this.workspaceRepository.create({
+        name: 'Default Workspace',
+        description: 'This is a built-in workspace.',
+        owner: user,
+      });
+      return await manager.save(workspace);
+    } catch (error) {
+      console.error('Error creating workspace:', error);
+      throw new InternalServerErrorException('Failed to create workspace');
+    }
+  }
 
-    // 3. 기본 프로젝트 생성
-    const project = this.projectRepository.create({
-      name: 'Default Project',
-      workspace,
-    });
-    workspace.projects = [project];
+  private async createDefaultProject(manager, workspace) {
+    try {
+      const project = this.projectRepository.create({
+        name: 'Default Project',
+        description: 'This is a default project description.',
+        workspace,
+      });
+      return await manager.save(project);
+    } catch (error) {
+      console.error('Error creating project:', error);
+      throw new InternalServerErrorException('Failed to create project');
+    }
+  }
 
-    // 4. 워크스페이스 멤버 생성
-    const workspaceMember = this.workspaceMemberRepository.create({
-      workspace,
-      user: savedUser,
-      role: Role.OWNER, // 소유자는 기본적으로 OWNER
-    });
-    workspace.members = [workspaceMember];
-
-    await this.workspaceRepository.save(workspace);
-
-    return instanceToPlain(savedUser);
+  private async createWorkspaceMember(manager, user, workspace) {
+    try {
+      const workspaceMember = this.workspaceMemberRepository.create({
+        workspace,
+        user,
+        role: Role.OWNER,
+      });
+      return await manager.save(workspaceMember);
+    } catch (error) {
+      console.error('Error creating workspace member:', error);
+      throw new InternalServerErrorException(
+        'Failed to create workspace member',
+      );
+    }
   }
 
   async logout(response: Response): Promise<void> {

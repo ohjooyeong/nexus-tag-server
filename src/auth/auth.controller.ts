@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LocalAuthGuard } from './guard/local.guard';
@@ -13,30 +22,51 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
+  @HttpCode(HttpStatus.OK) // 로그인 성공 시 200 OK 응답
   async login(
     @CurrentUser() user: User,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const data = await this.authService.login(user, response);
-    response.send(user);
-
-    return data;
+    const result = await this.authService.login(user, response);
+    return response.status(200).json({
+      statusCode: 200,
+      message: 'Login Successfully',
+      data: result,
+    });
   }
 
   @Post('logout')
   async logout(@Res({ passthrough: true }) response: Response) {
     await this.authService.logout(response);
-    return { message: 'Successfully logged out' };
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Successfully logged out',
+      data: null,
+    };
   }
 
   @Post('register')
+  @HttpCode(HttpStatus.CREATED)
   async register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto);
+    const user = await this.authService.register(dto);
+    return {
+      statusCode: HttpStatus.CREATED,
+      message: 'User registered successfully',
+      data: user,
+    };
   }
 
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   async getUserWithProfile(@CurrentUser() user: User) {
-    return this.authService.getUserWithProfile({ id: user.id });
+    const userProfile = await this.authService.getUserWithProfile({
+      id: user.id,
+    });
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Profile retrieved successfully',
+      data: userProfile,
+    };
   }
 }
