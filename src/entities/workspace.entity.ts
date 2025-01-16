@@ -1,4 +1,4 @@
-import { Project } from 'src/project/entities/project.entity';
+import { Project } from 'src/entities/project.entity';
 import {
   BaseEntity,
   Column,
@@ -10,7 +10,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { WorkspaceMember } from './workspace-member.entity';
-import { User } from 'src/user/entities/user.entity';
+import { User } from 'src/entities/user.entity';
 
 export enum Plan {
   FREE = 'FREE',

@@ -5,14 +5,16 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Query,
   Res,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LocalAuthGuard } from './guard/local.guard';
 import { CurrentUser } from './current-user.decorator';
-import { User } from 'src/user/entities/user.entity';
+import { User } from 'src/entities/user.entity';
 import { Response } from 'express';
 import { JwtAuthGuard } from './guard/jwt.guard';
 
@@ -49,6 +51,7 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   async register(@Body() dto: RegisterDto) {
     const user = await this.authService.register(dto);
+
     return {
       statusCode: HttpStatus.CREATED,
       message: 'User registered successfully',
@@ -68,5 +71,30 @@ export class AuthController {
       message: 'Profile retrieved successfully',
       data: userProfile,
     };
+  }
+
+  @Post('resend-verification-email')
+  async resendVerificationEmail(@Body('email') email: string) {
+    const user = await this.authService.findByEmail(email);
+    if (!user) {
+      throw new UnauthorizedException('User not found.');
+    }
+
+    await this.authService.resendVerificationEmail(user);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Verification email has been resent.',
+      data: null,
+    };
+  }
+
+  @Get('verify-email')
+  async verifyEmail(@Query('token') token: string) {
+    if (!token) {
+      throw new UnauthorizedException('Token is required.');
+    }
+
+    await this.authService.verifyEmail(token);
+    return { message: 'Email successfully verified. You can now log in.' };
   }
 }

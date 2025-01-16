@@ -1,7 +1,7 @@
 import { Exclude } from 'class-transformer';
-import { Profile } from 'src/profile/entities/profile.entity';
-import { WorkspaceMember } from 'src/workspace/entities/workspace-member.entity';
-import { Workspace } from 'src/workspace/entities/workspace.entity';
+import { Profile } from 'src/entities/profile.entity';
+import { WorkspaceMember } from 'src/entities/workspace-member.entity';
+import { Workspace } from 'src/entities/workspace.entity';
 import {
   BaseEntity,
   Column,
@@ -13,6 +13,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { EmailVerification } from './email-verification.entity';
 
 @Entity()
 export class User extends BaseEntity {
@@ -29,8 +30,8 @@ export class User extends BaseEntity {
   @Column({ type: 'date', comment: '유저 생일', nullable: true })
   birthdate: Date | null;
 
-  @Column({ type: 'boolean', default: false })
-  emailVerified: boolean;
+  @Column({ default: false })
+  isEmailVerified: boolean;
 
   @Exclude()
   @Column({ type: 'varchar' })
@@ -56,4 +57,11 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Workspace, (workspace) => workspace.owner)
   ownedWorkspaces: Workspace[];
+
+  @OneToMany(
+    () => EmailVerification,
+    (emailVerification) => emailVerification.user,
+    { cascade: true },
+  )
+  emailVerifications: EmailVerification[];
 }

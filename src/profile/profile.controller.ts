@@ -2,7 +2,7 @@ import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { ProfileService } from './profile.service';
 import { JwtAuthGuard } from 'src/auth/guard/jwt.guard';
 import { CurrentUser } from 'src/auth/current-user.decorator';
-import { Profile } from './entities/profile.entity';
+import { Profile } from '../entities/profile.entity';
 
 @Controller('profile')
 export class ProfileController {

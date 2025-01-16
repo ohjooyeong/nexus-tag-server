@@ -35,18 +35,6 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
       );
     }
 
-    // Additional checks (optional)
-    if (!user.emailVerified) {
-      throw new HttpException(
-        {
-          statusCode: 450,
-          message: 'Please verify your email before proceeding.',
-          data: user.email,
-        },
-        450,
-      );
-    }
-
     return user;
   }
 }

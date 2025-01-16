@@ -3,10 +3,11 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  UnauthorizedException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from 'src/user/entities/user.entity';
+import { User } from 'src/entities/user.entity';
 import { Repository, DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -16,12 +17,14 @@ import { Response } from 'express';
 import { GetUserDto } from './dto/get-user.dto';
 import { instanceToPlain } from 'class-transformer';
 
-import { Workspace } from 'src/workspace/entities/workspace.entity';
-import { Project } from 'src/project/entities/project.entity';
-import {
-  Role,
-  WorkspaceMember,
-} from 'src/workspace/entities/workspace-member.entity';
+import { Workspace } from 'src/entities/workspace.entity';
+import { Project } from 'src/entities/project.entity';
+import { Role, WorkspaceMember } from 'src/entities/workspace-member.entity';
+import { EmailVerificationService } from 'src/email-verification/email-verification.service';
+import { MailService } from 'src/mail/mail.service';
+import { emailTemplates } from 'src/mail/mail-template';
+import { EmailVerification } from 'src/entities/email-verification.entity';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -34,11 +37,14 @@ export class AuthService {
     private readonly projectRepository: Repository<Project>,
     @InjectRepository(WorkspaceMember)
     private readonly workspaceMemberRepository: Repository<WorkspaceMember>,
+    @InjectRepository(EmailVerification)
+    private readonly emailVerificationRepository: Repository<EmailVerification>,
 
     private readonly dataSource: DataSource,
-
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly emailVerificationService: EmailVerificationService,
+    private readonly mailService: MailService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -53,6 +59,13 @@ export class AuthService {
   }
 
   async login(user: User, response: Response) {
+    if (!user.isEmailVerified) {
+      await this.sendEmailVerification(user, 'en'); // 기본 언어는 영어로 설정
+      throw new UnauthorizedException(
+        'Email is not verified. A verification email has been sent. Please verify your email before logging in.',
+      );
+    }
+
     const tokenPayload = {
       userId: user.id,
     };
@@ -84,7 +97,7 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
 
     // 트랜잭션 사용
-    return await this.dataSource.transaction(async (manager) => {
+    const user = await this.dataSource.transaction(async (manager) => {
       try {
         // SRP에 따라 메서드 분리함.
         // 중간에 예외가 발생하면 데이터가 저장되지 않게 만듬.
@@ -101,7 +114,7 @@ export class AuthService {
 
         await this.createWorkspaceMember(manager, user, workspace);
 
-        return instanceToPlain(user);
+        return user;
       } catch (error) {
         if (error instanceof UnprocessableEntityException) {
           throw error;
@@ -117,6 +130,13 @@ export class AuthService {
         throw new InternalServerErrorException('An unexpected error occurred');
       }
     });
+
+    try {
+      await this.sendEmailVerification(user, 'en');
+    } catch (error) {
+      console.error('Error sending verification email', error.message);
+    }
+    return instanceToPlain(user);
   }
 
   private async createUser(
@@ -180,6 +200,31 @@ export class AuthService {
     }
   }
 
+  async sendEmailVerification(user: User, language: string): Promise<void> {
+    const token = await this.emailVerificationService.generateToken(user);
+    const verificationLink = `http://localhost:3000/verify-email?token=${token}`;
+    const template = emailTemplates[language] || emailTemplates.en;
+
+    // Send email using an email service (e.g., SendGrid, Nodemailer)
+    await this.mailService.sendEmail(
+      user.email,
+      template.subject,
+      template.content(verificationLink),
+    );
+  }
+
+  async resendVerificationEmail(user: User): Promise<void> {
+    if (user.isEmailVerified) {
+      throw new UnauthorizedException('Email is already verified.');
+    }
+
+    await this.sendEmailVerification(user, 'en');
+  }
+
+  async verifyEmail(token: string): Promise<void> {
+    await this.emailVerificationService.verifyToken(token);
+  }
+
   async logout(response: Response): Promise<void> {
     response.clearCookie('Authentication', { httpOnly: true });
   }
@@ -203,5 +248,9 @@ export class AuthService {
     // password를 exclude 했는데 password가 나오는 현상때문에
     // instanceToPlain 메서드를 활용함.
     return instanceToPlain(user);
+  }
+
+  async findByEmail(email: string): Promise<User | undefined> {
+    return this.userRepository.findOne({ where: { email } });
   }
 }

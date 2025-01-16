@@ -2,16 +2,16 @@ import { Module } from '@nestjs/common';
 import { ProfileService } from './profile.service';
 import { ProfileController } from './profile.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Profile } from './entities/profile.entity';
-import { User } from 'src/user/entities/user.entity';
+import { Profile } from '../entities/profile.entity';
+import { User } from 'src/entities/user.entity';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 
-import { Workspace } from 'src/workspace/entities/workspace.entity';
-import { Project } from 'src/project/entities/project.entity';
-import { Invitation } from 'src/workspace/entities/invitation.entity';
-import { WorkspaceMember } from 'src/workspace/entities/workspace-member.entity';
+import { Workspace } from 'src/entities/workspace.entity';
+import { Project } from 'src/entities/project.entity';
+import { Invitation } from 'src/entities/invitation.entity';
+import { WorkspaceMember } from 'src/entities/workspace-member.entity';
 
 @Module({
   imports: [

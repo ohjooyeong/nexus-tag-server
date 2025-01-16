@@ -9,24 +9,20 @@ import {
 } from 'typeorm';
 
 import { Workspace } from './workspace.entity';
-import { User } from 'src/user/entities/user.entity';
-
-export enum Role {
-  OWNER = 'OWNER',
-  MANAGER = 'MANAGER',
-  REVIEWER = 'REVIEWER',
-  WORKER = 'WORKER',
-  VIEWER = 'VIEWER',
-}
+import { User } from 'src/entities/user.entity';
+import { Role } from './workspace-member.entity';
 
 @Entity()
-export class WorkspaceMember {
+export class Invitation {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User, (user) => user.workspaceMembers)
+  @ManyToOne(() => User, { nullable: true }) // 이미 회원인 경우
   @JoinColumn()
-  user: User;
+  invitedUser: User;
+
+  @Column({ nullable: true }) // 회원이 아닌 경우 이메일 저장
+  email: string;
 
   @ManyToOne(() => Workspace, (workspace) => workspace.members)
   @JoinColumn()
@@ -38,6 +34,9 @@ export class WorkspaceMember {
     default: Role.WORKER,
   })
   role: Role;
+
+  @Column({ default: false })
+  accepted: boolean;
 
   @CreateDateColumn({ comment: '생성일' })
   createdAt: Date;

@@ -2,16 +2,19 @@ import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from 'src/user/entities/user.entity';
+import { User } from 'src/entities/user.entity';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { LocalStrategy } from './strategy/local.strategy';
 import { JwtStrategy } from './strategy/jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { Workspace } from 'src/workspace/entities/workspace.entity';
-import { Project } from 'src/project/entities/project.entity';
-import { WorkspaceMember } from 'src/workspace/entities/workspace-member.entity';
-import { Profile } from 'src/profile/entities/profile.entity';
+import { Workspace } from 'src/entities/workspace.entity';
+import { Project } from 'src/entities/project.entity';
+import { WorkspaceMember } from 'src/entities/workspace-member.entity';
+import { Profile } from 'src/entities/profile.entity';
+import { EmailVerification } from 'src/entities/email-verification.entity';
+import { EmailVerificationModule } from 'src/email-verification/email-verification.module';
+import { MailModule } from 'src/mail/mail.module';
 
 @Module({
   imports: [
@@ -21,7 +24,10 @@ import { Profile } from 'src/profile/entities/profile.entity';
       Project,
       WorkspaceMember,
       Profile,
+      EmailVerification,
     ]),
+    EmailVerificationModule,
+    MailModule,
     PassportModule,
     ConfigModule.forRoot({
       isGlobal: true,

@@ -1,4 +1,4 @@
-import { Workspace } from 'src/workspace/entities/workspace.entity';
+import { Workspace } from 'src/entities/workspace.entity';
 import {
   BaseEntity,
   Column,
