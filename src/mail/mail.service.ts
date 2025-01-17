@@ -1,14 +1,18 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class MailService {
-  constructor(private readonly mailerService: MailerService) {}
+  constructor(
+    private readonly mailerService: MailerService,
+    private configService: ConfigService,
+  ) {}
 
   async sendEmail(to: string, subject: string, html: string): Promise<void> {
     try {
       await this.mailerService.sendMail({
-        from: `${process.env.EMAIL_USER}`, // 발신자 정보
+        from: this.configService.get('EMIAL_USER'), // 발신자 정보
         to,
         subject,
         html, // HTML 형식의 이메일 내용

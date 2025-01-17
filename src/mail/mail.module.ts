@@ -5,13 +5,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
+    ConfigModule,
     MailerModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({
         transport: {
-          host: 'smtp.naver.com',
+          host: 'smtp.gmail.com',
           port: 587,
           secure: false,
           auth: {
