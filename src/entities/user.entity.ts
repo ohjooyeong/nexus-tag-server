@@ -8,6 +8,7 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  ManyToOne,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -43,11 +44,6 @@ export class User extends BaseEntity {
   @UpdateDateColumn({ comment: '수정일' })
   updatedAt: Date;
 
-  /**
-   * 1 : 1 관계 설정
-   * @OneToOne -> 해당 엔티티(User) To 대상 엔티티(Profile)
-   *              하나의 유저는 하나의 개인정보를 갖는다.
-   */
   @OneToOne(() => Profile, (profile) => profile.user, { cascade: true })
   @JoinColumn({ name: 'profile' })
   profile: Profile;
@@ -64,4 +60,7 @@ export class User extends BaseEntity {
     { cascade: true },
   )
   emailVerifications: EmailVerification[];
+
+  @ManyToOne(() => Workspace, { nullable: true, eager: true })
+  defaultWorkspace: Workspace;
 }

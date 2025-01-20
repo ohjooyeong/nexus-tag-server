@@ -37,8 +37,6 @@ export class AuthService {
     private readonly projectRepository: Repository<Project>,
     @InjectRepository(WorkspaceMember)
     private readonly workspaceMemberRepository: Repository<WorkspaceMember>,
-    @InjectRepository(EmailVerification)
-    private readonly emailVerificationRepository: Repository<EmailVerification>,
 
     private readonly dataSource: DataSource,
     private readonly jwtService: JwtService,

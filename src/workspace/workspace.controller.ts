@@ -7,42 +7,77 @@ import {
   Param,
   Delete,
   UseGuards,
+  HttpStatus,
 } from '@nestjs/common';
 import { WorkspaceService } from './workspace.service';
-import { CreateWorkspaceDto } from './dto/create-workspace.dto';
-import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
+
 import { JwtAuthGuard } from 'src/auth/guard/jwt.guard';
+import { CurrentUser } from 'src/auth/current-user.decorator';
+import { User } from 'src/entities/user.entity';
 
 @Controller('workspace')
 @UseGuards(JwtAuthGuard)
 export class WorkspaceController {
   constructor(private readonly workspaceService: WorkspaceService) {}
 
-  @Post()
-  create(@Body() createWorkspaceDto: CreateWorkspaceDto) {
-    return this.workspaceService.create(createWorkspaceDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.workspaceService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.workspaceService.findOne(id);
-  }
-
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateWorkspaceDto: UpdateWorkspaceDto,
+  @Post('set-default-workspace')
+  async setDefaultWorkspace(
+    @CurrentUser() user: User,
+    @Body() workspaceId: string,
   ) {
-    return this.workspaceService.update(id, updateWorkspaceDto);
+    const data = this.workspaceService.setDefaultWorkspace(workspaceId, user);
+    return {
+      statusCode: HttpStatus.CREATED,
+      message: 'Default workspace updated successfully',
+      data: { workspaceId: data },
+    };
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.workspaceService.remove(id);
+  @Get('workspaces')
+  async getWorkspaces(@CurrentUser() user: User) {
+    const workspaces = await this.workspaceService.getWorkspaces(user);
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Default workspace found successfully',
+      data: workspaces,
+    };
+  }
+
+  @Get('default-workspace')
+  async getDefaultWorkspace(@CurrentUser() user: User) {
+    const data = await this.workspaceService.getDefaultWorkspace(user);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Default workspace found successfully',
+      data: data,
+    };
+  }
+
+  @Get(':workspaceId')
+  async getWorkspaceById(
+    @Param('workspaceId') workspaceId: string,
+    @CurrentUser() user: User,
+  ) {
+    const data = this.workspaceService.getWorkspaceById(workspaceId, user.id);
+    return {
+      statusCode: HttpStatus.CREATED,
+      message: 'Current workspace found successfully',
+      data: data,
+    };
+  }
+
+  @Delete(':workspaceId')
+  async deleteWorkspace(
+    @Param('workspaceId') workspaceId: string,
+    @CurrentUser() user: User,
+  ) {
+    await this.workspaceService.deleteWorkspace(workspaceId, user);
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Workspace deletedsuccessfully',
+      data: null,
+    };
   }
 }
