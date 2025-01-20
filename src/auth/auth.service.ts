@@ -58,6 +58,15 @@ export class AuthService {
     return null;
   }
 
+  async validateToken(token: string): Promise<any> {
+    try {
+      const payload = this.jwtService.verify(token);
+      return { userId: payload.userId };
+    } catch (error) {
+      throw new UnauthorizedException('Invalid token');
+    }
+  }
+
   async login(user: User, response: Response) {
     if (!user.isEmailVerified) {
       await this.sendEmailVerification(user, 'en'); // 기본 언어는 영어로 설정
@@ -202,7 +211,7 @@ export class AuthService {
 
   async sendEmailVerification(user: User, language: string): Promise<void> {
     const token = await this.emailVerificationService.generateToken(user);
-    const verificationLink = `http://localhost:3000/verify-email?token=${token}`;
+    const verificationLink = `http://localhost:3000/email-verify?token=${token}`;
     const template = emailTemplates[language] || emailTemplates.en;
 
     // Send email using an email service (e.g., SendGrid, Nodemailer)

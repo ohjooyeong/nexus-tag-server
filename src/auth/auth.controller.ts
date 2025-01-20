@@ -5,7 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Post,
-  Query,
+  Req,
   Res,
   UnauthorizedException,
   UseGuards,
@@ -15,7 +15,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LocalAuthGuard } from './guard/local.guard';
 import { CurrentUser } from './current-user.decorator';
 import { User } from 'src/entities/user.entity';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { JwtAuthGuard } from './guard/jwt.guard';
 
 @Controller('auth')
@@ -73,6 +73,34 @@ export class AuthController {
     };
   }
 
+  @Get('status')
+  async getStatus(@Req() request: Request) {
+    const token = request.cookies?.Authentication;
+
+    if (!token) {
+      return {
+        statusCode: HttpStatus.OK,
+        message: 'loggedIn false',
+        data: { loggedIn: false },
+      };
+    }
+
+    try {
+      const user = await this.authService.validateToken(token);
+      return {
+        statusCode: HttpStatus.OK,
+        message: 'loggedIn true',
+        data: { loggedIn: true, user },
+      };
+    } catch (error) {
+      return {
+        statusCode: HttpStatus.OK,
+        message: 'loggedIn false',
+        data: { loggedIn: false },
+      };
+    }
+  }
+
   @Post('resend-verification-email')
   async resendVerificationEmail(@Body('email') email: string) {
     const user = await this.authService.findByEmail(email);
@@ -88,8 +116,8 @@ export class AuthController {
     };
   }
 
-  @Get('verify-email')
-  async verifyEmail(@Query('token') token: string) {
+  @Post('verify-email')
+  async verifyEmail(@Body('token') token: string) {
     if (!token) {
       throw new UnauthorizedException('Token is required.');
     }
