@@ -3,7 +3,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 
 import { DataSource, Repository } from 'typeorm';
 import { Workspace } from '../entities/workspace.entity';

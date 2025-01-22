@@ -77,10 +77,12 @@ export class AuthService {
       userId: user.id,
     };
 
-    const expires = new Date();
-    expires.setSeconds(
-      expires.getSeconds() + this.configService.get('JWT_EXPIRATION'),
+    const expirationInSeconds = Number(
+      this.configService.get('JWT_EXPIRATION'),
     );
+
+    const expires = new Date();
+    expires.setSeconds(expires.getSeconds() + expirationInSeconds);
 
     const token = this.jwtService.sign(tokenPayload);
 
