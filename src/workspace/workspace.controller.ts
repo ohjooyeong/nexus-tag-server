@@ -25,7 +25,10 @@ export class WorkspaceController {
     @CurrentUser() user: User,
     @Body() workspaceId: string,
   ) {
-    const data = this.workspaceService.setDefaultWorkspace(workspaceId, user);
+    const data = await this.workspaceService.setDefaultWorkspace(
+      workspaceId,
+      user,
+    );
     return {
       statusCode: HttpStatus.CREATED,
       message: 'Default workspace updated successfully',
@@ -33,13 +36,13 @@ export class WorkspaceController {
     };
   }
 
-  @Get('workspaces')
+  @Get('')
   async getWorkspaces(@CurrentUser() user: User) {
     const workspaces = await this.workspaceService.getWorkspaces(user);
 
     return {
       statusCode: HttpStatus.OK,
-      message: 'Default workspace found successfully',
+      message: 'workspace list found successfully',
       data: workspaces,
     };
   }
@@ -59,9 +62,12 @@ export class WorkspaceController {
     @Param('workspaceId') workspaceId: string,
     @CurrentUser() user: User,
   ) {
-    const data = this.workspaceService.getWorkspaceById(workspaceId, user.id);
+    const data = await this.workspaceService.getWorkspaceById(
+      workspaceId,
+      user.id,
+    );
     return {
-      statusCode: HttpStatus.CREATED,
+      statusCode: HttpStatus.OK,
       message: 'Current workspace found successfully',
       data: data,
     };

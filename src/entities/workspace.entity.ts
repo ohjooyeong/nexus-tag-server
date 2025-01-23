@@ -26,7 +26,7 @@ export class Workspace extends BaseEntity {
   @Column()
   name: string;
 
-  @Column()
+  @Column({ nullable: true })
   description: string;
 
   @Column({
@@ -48,7 +48,10 @@ export class Workspace extends BaseEntity {
   members: WorkspaceMember[];
 
   // Project와 엔티티 사이의 관계 설정
-  @OneToMany(() => Project, (project) => project.workspace, { cascade: true })
+  @OneToMany(() => Project, (project) => project.workspace, {
+    cascade: true,
+    nullable: true,
+  })
   projects: Project[];
 
   @CreateDateColumn()
