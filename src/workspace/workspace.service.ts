@@ -1,14 +1,17 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 
 import { DataSource, Repository } from 'typeorm';
 import { Workspace } from '../entities/workspace.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/entities/user.entity';
-import { WorkspaceMember } from 'src/entities/workspace-member.entity';
+import { Role, WorkspaceMember } from 'src/entities/workspace-member.entity';
 
 @Injectable()
 export class WorkspaceService {
@@ -22,6 +25,69 @@ export class WorkspaceService {
 
     private readonly dataSource: DataSource,
   ) {}
+
+  async createWorkspace(workspaceName: string, userDto: User) {
+    const workspace = await this.dataSource.transaction(async (manager) => {
+      try {
+        const workspace = await this.syncCreateWorkspace(
+          manager,
+          workspaceName,
+          userDto,
+        );
+
+        await this.syncCreateWorkspaceMember(manager, userDto, workspace);
+
+        return workspace;
+      } catch (error) {
+        if (error instanceof UnprocessableEntityException) {
+          throw error;
+        }
+
+        // 데이터베이스 에러
+        if (error.code === '23505') {
+          // PostgreSQL 고유 키 중복 에러 코드
+          throw new BadRequestException('Duplicate data detected');
+        }
+
+        console.error('Unexpected error during creation:', error);
+        throw new InternalServerErrorException('An unexpected error occurred');
+      }
+    });
+
+    return workspace;
+  }
+
+  private async syncCreateWorkspace(manager, workspaceName, user) {
+    try {
+      const workspace = this.workspaceRepository.create({
+        name: workspaceName,
+        description: '',
+        owner: user,
+      });
+
+      return await manager.save(workspace);
+    } catch (error) {
+      console.error('Error creating workspace:', error);
+      throw new InternalServerErrorException('Failed to create workspace');
+    }
+  }
+
+  private async syncCreateWorkspaceMember(manager, user, workspace) {
+    try {
+      const workspaceMember = this.workspaceMemberRepository.create({
+        workspace,
+        user,
+        role: Role.OWNER,
+      });
+
+      return await manager.save(workspaceMember);
+    } catch (error) {
+      console.error('Error creating workspace member:', error);
+      throw new InternalServerErrorException(
+        'Failed to create workspace member',
+      );
+    }
+  }
 
   async setDefaultWorkspace(workspaceId: string, user: User) {
     const workspace = await this.workspaceRepository.findOne({

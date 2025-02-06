@@ -24,7 +24,6 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  @HttpCode(HttpStatus.OK) // 로그인 성공 시 200 OK 응답
   async login(
     @CurrentUser() user: User,
     @Res({ passthrough: true }) response: Response,

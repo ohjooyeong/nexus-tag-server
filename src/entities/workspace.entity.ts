@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 import { WorkspaceMember } from './workspace-member.entity';
 import { User } from 'src/entities/user.entity';
+import { MinLength } from 'class-validator';
 
 export enum Plan {
   FREE = 'FREE',
@@ -24,6 +25,9 @@ export class Workspace extends BaseEntity {
   id: string;
 
   @Column()
+  @MinLength(4, {
+    message: 'Workspace name must be at least 4 characters long.',
+  })
   name: string;
 
   @Column({ nullable: true })

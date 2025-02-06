@@ -23,8 +23,6 @@ import { Role, WorkspaceMember } from 'src/entities/workspace-member.entity';
 import { EmailVerificationService } from 'src/email-verification/email-verification.service';
 import { MailService } from 'src/mail/mail.service';
 import { emailTemplates } from 'src/mail/mail-template';
-import { EmailVerification } from 'src/entities/email-verification.entity';
-import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -111,17 +109,17 @@ export class AuthService {
         // SRP에 따라 메서드 분리함.
         // 중간에 예외가 발생하면 데이터가 저장되지 않게 만듬.
         // 데이터를 save 하지않으면 각 관계에 대한 ID가 만들어지지 않아서 오류가 발생함.
-        const user = await this.createUser(
+        const user = await this.syncCreateUser(
           manager,
           registerDto,
           hashedPassword,
         );
 
-        const workspace = await this.createDefaultWorkspace(manager, user);
+        const workspace = await this.syncCreateDefaultWorkspace(manager, user);
 
-        await this.createDefaultProject(manager, workspace);
+        await this.syncCreateDefaultProject(manager, workspace);
 
-        await this.createWorkspaceMember(manager, user, workspace);
+        await this.syncCreateWorkspaceMember(manager, user, workspace);
 
         return user;
       } catch (error) {
@@ -148,7 +146,7 @@ export class AuthService {
     return instanceToPlain(user);
   }
 
-  private async createUser(
+  private async syncCreateUser(
     manager,
     registerDto: RegisterDto,
     hashedPassword: string,
@@ -165,7 +163,7 @@ export class AuthService {
     }
   }
 
-  private async createDefaultWorkspace(manager, user) {
+  private async syncCreateDefaultWorkspace(manager, user) {
     try {
       const workspace = this.workspaceRepository.create({
         name: 'Default Workspace',
@@ -179,7 +177,7 @@ export class AuthService {
     }
   }
 
-  private async createDefaultProject(manager, workspace) {
+  private async syncCreateDefaultProject(manager, workspace) {
     try {
       const project = this.projectRepository.create({
         name: 'Default Project',
@@ -193,7 +191,7 @@ export class AuthService {
     }
   }
 
-  private async createWorkspaceMember(manager, user, workspace) {
+  private async syncCreateWorkspaceMember(manager, user, workspace) {
     try {
       const workspaceMember = this.workspaceMemberRepository.create({
         workspace,

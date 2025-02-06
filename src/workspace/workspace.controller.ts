@@ -36,6 +36,22 @@ export class WorkspaceController {
     };
   }
 
+  @Post('')
+  async createWorkspace(
+    @CurrentUser() user: User,
+    @Body() workspaceDto: { workspaceName: string },
+  ) {
+    const data = await this.workspaceService.createWorkspace(
+      workspaceDto.workspaceName,
+      user,
+    );
+    return {
+      statusCode: HttpStatus.CREATED,
+      message: 'workspace created successfully',
+      data: data,
+    };
+  }
+
   @Get('')
   async getWorkspaces(@CurrentUser() user: User) {
     const workspaces = await this.workspaceService.getWorkspaces(user);
@@ -82,7 +98,7 @@ export class WorkspaceController {
 
     return {
       statusCode: HttpStatus.OK,
-      message: 'Workspace deletedsuccessfully',
+      message: 'Workspace deleted successfully',
       data: null,
     };
   }
