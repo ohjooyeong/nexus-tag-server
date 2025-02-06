@@ -128,11 +128,25 @@ export class WorkspaceService {
     userId: string,
   ): Promise<Workspace> {
     const workspace = await this.workspaceRepository.findOne({
-      where: { id: workspaceId, members: { user: { id: userId } } },
+      where: { id: workspaceId },
+      relations: ['members', 'members.user', 'owner'], // user 정보까지 가져오는거
     });
 
     if (!workspace) {
-      throw new NotFoundException('Workspace not found or access denied');
+      throw new NotFoundException('Workspace not found');
+    }
+
+    //  members 배열이 올바르게 로드되지 않았을 경우 예외 처리
+    if (!workspace.members) {
+      throw new ForbiddenException('Invalid workspace data');
+    }
+
+    const isMember = workspace.members.some(
+      (member) => member.user && member.user.id === userId, //  member.user가 존재하는지 확인
+    );
+
+    if (!isMember) {
+      throw new ForbiddenException('You do not have access to this workspace');
     }
 
     return workspace;

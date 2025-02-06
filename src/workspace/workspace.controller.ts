@@ -47,7 +47,7 @@ export class WorkspaceController {
     );
     return {
       statusCode: HttpStatus.CREATED,
-      message: 'workspace created successfully',
+      message: 'Workspace created successfully',
       data: data,
     };
   }
@@ -58,7 +58,7 @@ export class WorkspaceController {
 
     return {
       statusCode: HttpStatus.OK,
-      message: 'workspace list found successfully',
+      message: 'Workspace list found successfully',
       data: workspaces,
     };
   }
