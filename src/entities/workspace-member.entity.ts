@@ -24,11 +24,15 @@ export class WorkspaceMember {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User, (user) => user.workspaceMembers)
+  @ManyToOne(() => User, (user) => user.workspaceMembers, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn()
   user: User;
 
-  @ManyToOne(() => Workspace, (workspace) => workspace.members)
+  @ManyToOne(() => Workspace, (workspace) => workspace.members, {
+    onDelete: 'CASCADE', // DB 레벨에서도 삭제 가능하도록 설정
+  })
   @JoinColumn()
   workspace: Workspace;
 

@@ -48,10 +48,14 @@ export class User extends BaseEntity {
   @JoinColumn({ name: 'profile' })
   profile: Profile;
 
-  @OneToMany(() => WorkspaceMember, (workspaceMember) => workspaceMember.user)
+  @OneToMany(() => WorkspaceMember, (workspaceMember) => workspaceMember.user, {
+    cascade: true,
+  })
   workspaceMembers: WorkspaceMember[];
 
-  @OneToMany(() => Workspace, (workspace) => workspace.owner)
+  @OneToMany(() => Workspace, (workspace) => workspace.owner, {
+    cascade: true,
+  })
   ownedWorkspaces: Workspace[];
 
   @OneToMany(

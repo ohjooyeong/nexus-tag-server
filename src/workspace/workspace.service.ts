@@ -12,6 +12,7 @@ import { Workspace } from '../entities/workspace.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/entities/user.entity';
 import { Role, WorkspaceMember } from 'src/entities/workspace-member.entity';
+import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 
 @Injectable()
 export class WorkspaceService {
@@ -120,7 +121,9 @@ export class WorkspaceService {
       relations: ['workspace'],
     });
 
-    return workspaces.map((member) => member.workspace);
+    return workspaces
+      .map((member) => member.workspace)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   async getWorkspaceById(
@@ -173,7 +176,32 @@ export class WorkspaceService {
     return user.defaultWorkspace;
   }
 
-  async deleteWorkspace(workspaceId: string, user: User): Promise<void> {
+  async updateWorkspace(
+    workspaceId: string,
+    userId: string,
+    updateData: UpdateWorkspaceDto,
+  ): Promise<Workspace> {
+    const workspace = await this.workspaceRepository.findOne({
+      where: { id: workspaceId },
+      relations: ['owner'],
+    });
+
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+
+    if (workspace.owner.id !== userId) {
+      throw new ForbiddenException('You do not own this workspace');
+    }
+
+    // 워크스페이스 정보 업데이트
+    workspace.name = updateData.name ?? workspace.name;
+    workspace.description = updateData.description ?? workspace.description;
+
+    return await this.workspaceRepository.save(workspace);
+  }
+
+  async deleteWorkspace(workspaceId: string, userId: string): Promise<void> {
     const queryRunner = this.dataSource.createQueryRunner();
 
     // 트랜잭션 시작
@@ -181,44 +209,44 @@ export class WorkspaceService {
     await queryRunner.startTransaction();
 
     try {
-      // 워크스페이스 조회
+      const user = await queryRunner.manager.findOne(User, {
+        where: { id: userId },
+        relations: ['ownedWorkspaces'],
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
       const workspace = await queryRunner.manager.findOne(Workspace, {
         where: { id: workspaceId },
-        relations: ['members', 'members.user'],
+        relations: ['owner', 'members'],
       });
 
       if (!workspace) {
         throw new NotFoundException('Workspace not found');
       }
 
-      if (workspace.owner.id !== user.id) {
+      if (workspace.owner.id !== userId) {
         throw new ForbiddenException('You do not own this workspace');
+      }
+
+      // 유저가 소유한(Owner인) 워크스페이스 개수 확인
+      if (user.ownedWorkspaces.length <= 1) {
+        throw new ForbiddenException('You must own at least one workspace');
+      }
+
+      // 기본 워크스페이스 업데이트 (삭제된 경우)
+      if (user.defaultWorkspace.id === workspaceId) {
+        const remainingOwnedWorkspaces = user.ownedWorkspaces.filter(
+          (w) => w.id !== workspaceId,
+        );
+        user.defaultWorkspace = remainingOwnedWorkspaces[0] || null;
+        await queryRunner.manager.save(user);
       }
 
       // 워크스페이스 삭제
       await queryRunner.manager.remove(workspace);
-
-      // 기본 워크스페이스가 삭제된 유저 처리
-      const usersToUpdate = await queryRunner.manager.find(User, {
-        where: { defaultWorkspace: { id: workspaceId } },
-        relations: ['workspaceMemberships', 'workspaceMemberships.workspace'],
-      });
-
-      for (const user of usersToUpdate) {
-        const userOwnedWorkspaces = user.workspaceMembers
-          .filter((member) => member.workspace.owner.id === user.id)
-          .map((member) => member.workspace);
-
-        if (userOwnedWorkspaces.length > 0) {
-          // 유저가 생성한 워크스페이스 중 첫 번째를 기본값으로 설정
-          user.defaultWorkspace = userOwnedWorkspaces[0];
-        } else {
-          // 유저가 생성한 워크스페이스가 없다면 기본값 제거
-          user.defaultWorkspace = null;
-        }
-
-        await queryRunner.manager.save(user);
-      }
 
       // 트랜잭션 커밋
       await queryRunner.commitTransaction();

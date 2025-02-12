@@ -33,7 +33,9 @@ export class Project extends BaseEntity {
   })
   content_type: CONTENT_TYPE;
 
-  @ManyToOne(() => Workspace, (workspace) => workspace.projects)
+  @ManyToOne(() => Workspace, (workspace) => workspace.projects, {
+    onDelete: 'CASCADE',
+  })
   workspace: Workspace;
 
   @CreateDateColumn({ comment: '생성일' })

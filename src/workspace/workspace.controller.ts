@@ -3,17 +3,19 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   UseGuards,
   HttpStatus,
+  Put,
 } from '@nestjs/common';
 import { WorkspaceService } from './workspace.service';
 
 import { JwtAuthGuard } from 'src/auth/guard/jwt.guard';
 import { CurrentUser } from 'src/auth/current-user.decorator';
 import { User } from 'src/entities/user.entity';
+import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
+import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 
 @Controller('workspace')
 @UseGuards(JwtAuthGuard)
@@ -39,10 +41,10 @@ export class WorkspaceController {
   @Post('')
   async createWorkspace(
     @CurrentUser() user: User,
-    @Body() workspaceDto: { workspaceName: string },
+    @Body() workspaceDto: CreateWorkspaceDto,
   ) {
     const data = await this.workspaceService.createWorkspace(
-      workspaceDto.workspaceName,
+      workspaceDto.name,
       user,
     );
     return {
@@ -89,12 +91,31 @@ export class WorkspaceController {
     };
   }
 
+  @Put(':workspaceId')
+  async updateWorkspace(
+    @Param('workspaceId') workspaceId: string,
+    @CurrentUser() user,
+    @Body() updateWorkspaceDto: UpdateWorkspaceDto,
+  ) {
+    const data = await this.workspaceService.updateWorkspace(
+      workspaceId,
+      user.id,
+      updateWorkspaceDto,
+    );
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Workspace updated successfully',
+      data: data,
+    };
+  }
+
   @Delete(':workspaceId')
   async deleteWorkspace(
     @Param('workspaceId') workspaceId: string,
     @CurrentUser() user: User,
   ) {
-    await this.workspaceService.deleteWorkspace(workspaceId, user);
+    await this.workspaceService.deleteWorkspace(workspaceId, user.id);
 
     return {
       statusCode: HttpStatus.OK,

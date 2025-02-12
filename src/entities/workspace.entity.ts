@@ -41,13 +41,16 @@ export class Workspace extends BaseEntity {
   })
   plan: Plan;
 
-  @ManyToOne(() => User, (user) => user.ownedWorkspaces, { nullable: false })
+  @ManyToOne(() => User, (user) => user.ownedWorkspaces, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
   owner: User;
 
   @OneToMany(
     () => WorkspaceMember,
     (workspaceMember) => workspaceMember.workspace,
-    { cascade: true },
+    { cascade: true }, // TypeORM에서 새로운 관계 생성, 업데이트, 삭제할 때
   )
   members: WorkspaceMember[];
 
