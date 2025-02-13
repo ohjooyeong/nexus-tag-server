@@ -17,7 +17,7 @@ import { User } from 'src/entities/user.entity';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 
-@Controller('workspace')
+@Controller('workspaces')
 @UseGuards(JwtAuthGuard)
 export class WorkspaceController {
   constructor(private readonly workspaceService: WorkspaceService) {}
