@@ -117,7 +117,7 @@ export class AuthService {
 
         const workspace = await this.syncCreateDefaultWorkspace(manager, user);
 
-        await this.syncCreateDefaultProject(manager, workspace);
+        await this.syncCreateDefaultProject(manager, user, workspace);
 
         await this.syncCreateWorkspaceMember(manager, user, workspace);
 
@@ -177,12 +177,13 @@ export class AuthService {
     }
   }
 
-  private async syncCreateDefaultProject(manager, workspace) {
+  private async syncCreateDefaultProject(manager, user, workspace) {
     try {
       const project = this.projectRepository.create({
         name: 'Default Project',
         description: 'This is a default project description.',
         workspace,
+        createdBy: user,
       });
       return await manager.save(project);
     } catch (error) {

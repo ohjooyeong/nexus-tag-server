@@ -1,13 +1,17 @@
-import { Workspace } from 'src/entities/workspace.entity';
 import {
   BaseEntity,
   Column,
   CreateDateColumn,
   Entity,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Workspace } from 'src/entities/workspace.entity';
+import { Dataset } from './dataset.entity';
+import { ClassLabel } from './class-label.entity';
+import { User } from './user.entity';
 
 export enum CONTENT_TYPE {
   IMAGE = 'IMAGE',
@@ -16,8 +20,8 @@ export enum CONTENT_TYPE {
 
 @Entity()
 export class Project extends BaseEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   name: string;
@@ -37,6 +41,24 @@ export class Project extends BaseEntity {
     onDelete: 'CASCADE',
   })
   workspace: Workspace;
+
+  @OneToMany(() => Dataset, (dataset) => dataset.project, {
+    cascade: true,
+    nullable: true,
+  })
+  datasets?: Dataset[];
+
+  @OneToMany(() => ClassLabel, (classLabel) => classLabel.project, {
+    cascade: true,
+    nullable: true,
+  })
+  classLabels?: ClassLabel[];
+
+  @ManyToOne(() => User, (user) => user.projects, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
+  createdBy: User;
 
   @CreateDateColumn({ comment: '생성일' })
   createdAt: Date;

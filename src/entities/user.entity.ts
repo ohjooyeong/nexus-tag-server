@@ -15,6 +15,10 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { EmailVerification } from './email-verification.entity';
+import { Project } from './project.entity';
+import { Dataset } from './dataset.entity';
+import { DataItem } from './data-item.entity';
+import { Annotation } from './annotation.entity';
 
 @Entity()
 export class User extends BaseEntity {
@@ -67,4 +71,16 @@ export class User extends BaseEntity {
 
   @ManyToOne(() => Workspace, { nullable: true, eager: true })
   defaultWorkspace: Workspace;
+
+  @OneToMany(() => Project, (project) => project.createdBy)
+  projects: Project[];
+
+  @OneToMany(() => Dataset, (dataset) => dataset.createdBy)
+  datasets: Dataset[];
+
+  @OneToMany(() => DataItem, (dataItem) => dataItem.createdBy)
+  dataItems: DataItem[];
+
+  @OneToMany(() => Annotation, (annotation) => annotation.createdBy)
+  annotations: Annotation[];
 }

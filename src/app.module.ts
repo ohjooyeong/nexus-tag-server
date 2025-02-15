@@ -18,6 +18,10 @@ import { WorkspaceMember } from './entities/workspace-member.entity';
 import { MailModule } from './mail/mail.module';
 import { EmailVerification } from './entities/email-verification.entity';
 import { EmailVerificationModule } from './email-verification/email-verification.module';
+import { Annotation } from './entities/annotation.entity';
+import { ClassLabel } from './entities/class-label.entity';
+import { DataItem } from './entities/data-item.entity';
+import { Dataset } from './entities/dataset.entity';
 
 @Module({
   imports: [
@@ -41,6 +45,10 @@ import { EmailVerificationModule } from './email-verification/email-verification
         Invitation,
         WorkspaceMember,
         EmailVerification,
+        Annotation,
+        ClassLabel,
+        DataItem,
+        Dataset,
       ],
     }),
 

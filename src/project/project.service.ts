@@ -1,10 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateProjectDto } from './dto/create-project.dto';
-import { UpdateProjectDto } from './dto/update-project.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Project } from 'src/entities/project.entity';
 import { Repository } from 'typeorm';
 import { Workspace } from 'src/entities/workspace.entity';
+import { User } from 'src/entities/user.entity';
 
 @Injectable()
 export class ProjectService {
@@ -14,6 +18,34 @@ export class ProjectService {
     @InjectRepository(Workspace)
     private readonly workspaceRepository: Repository<Workspace>,
   ) {}
+
+  async createProject(createProjectDto: CreateProjectDto, user: User) {
+    try {
+      const { workspaceId, name, description } = createProjectDto;
+
+      const workspace = await this.workspaceRepository.findOne({
+        where: { id: workspaceId },
+      });
+
+      if (!workspace) {
+        throw new NotFoundException('Workspace not found');
+      }
+
+      const project = this.projectRepository.create({
+        name,
+        description,
+        workspace,
+        createdBy: user,
+      });
+
+      const resultProject = await this.projectRepository.save(project);
+
+      return resultProject;
+    } catch (error) {
+      console.error('Unexpected error during create project:', error);
+      throw new InternalServerErrorException('An unexpected error occurred');
+    }
+  }
 
   async findProjectsByWorkspace(
     workspaceId: string,
