@@ -10,7 +10,6 @@ import { JwtModule } from '@nestjs/jwt';
 
 import { Workspace } from 'src/entities/workspace.entity';
 import { Project } from 'src/entities/project.entity';
-import { Invitation } from 'src/entities/invitation.entity';
 import { WorkspaceMember } from 'src/entities/workspace-member.entity';
 
 @Module({
@@ -20,7 +19,6 @@ import { WorkspaceMember } from 'src/entities/workspace-member.entity';
       Project,
       User,
       Profile,
-      Invitation,
       WorkspaceMember,
     ]),
     PassportModule,

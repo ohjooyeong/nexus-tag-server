@@ -6,11 +6,10 @@ import { Workspace } from '../entities/workspace.entity';
 import { AuthModule } from 'src/auth/auth.module';
 import { WorkspaceMember } from '../entities/workspace-member.entity';
 import { User } from 'src/entities/user.entity';
-import { Invitation } from '../entities/invitation.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Workspace, WorkspaceMember, User, Invitation]),
+    TypeOrmModule.forFeature([Workspace, WorkspaceMember, User]),
     AuthModule,
   ],
   controllers: [WorkspaceController],

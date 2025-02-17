@@ -13,7 +13,6 @@ import { User } from './entities/user.entity';
 import { ProfileModule } from './profile/profile.module';
 import { ConfigModule } from '@nestjs/config';
 import { Profile } from './entities/profile.entity';
-import { Invitation } from './entities/invitation.entity';
 import { WorkspaceMember } from './entities/workspace-member.entity';
 import { MailModule } from './mail/mail.module';
 import { EmailVerification } from './entities/email-verification.entity';
@@ -42,7 +41,6 @@ import { Dataset } from './entities/dataset.entity';
         Project,
         User,
         Profile,
-        Invitation,
         WorkspaceMember,
         EmailVerification,
         Annotation,
