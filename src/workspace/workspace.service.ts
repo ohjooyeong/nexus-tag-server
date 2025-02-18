@@ -259,4 +259,25 @@ export class WorkspaceService {
       await queryRunner.release();
     }
   }
+
+  async getWorkspaceMembers(workspaceId: string) {
+    const workspaceMembers = await this.workspaceMemberRepository.find({
+      where: { workspace: { id: workspaceId } },
+      relations: ['user'],
+    });
+
+    if (!workspaceMembers) {
+      throw new NotFoundException('Workspace members not found');
+    }
+
+    const transformedMembers = workspaceMembers.map((member) => ({
+      id: member.id,
+      email: member.user.email,
+      username: member.user.username,
+      userId: member.user.id,
+      role: member.role,
+    }));
+
+    return transformedMembers;
+  }
 }

@@ -123,4 +123,14 @@ export class WorkspaceController {
       data: null,
     };
   }
+
+  @Get(':workspaceId/members')
+  async getWorkspaceMembers(@Param('workspaceId') workspaceId: string) {
+    const data = await this.workspaceService.getWorkspaceMembers(workspaceId);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Workspace members found successfully',
+      data: data,
+    };
+  }
 }
