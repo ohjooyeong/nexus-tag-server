@@ -16,6 +16,7 @@ import { CurrentUser } from 'src/auth/current-user.decorator';
 import { User } from 'src/entities/user.entity';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
+import { Role } from 'src/entities/workspace-member.entity';
 
 @Controller('workspaces')
 @UseGuards(JwtAuthGuard)
@@ -130,6 +131,22 @@ export class WorkspaceController {
     return {
       statusCode: HttpStatus.OK,
       message: 'Workspace members found successfully',
+      data: data,
+    };
+  }
+
+  @Post('members')
+  async addWorkspaceMember(
+    @Body() addMemberDto: { email: string; role: Role; workspaceId: string },
+  ) {
+    const data = await this.workspaceService.addWorkspaceMember(
+      addMemberDto.workspaceId,
+      addMemberDto.email,
+      addMemberDto.role,
+    );
+    return {
+      statusCode: HttpStatus.CREATED,
+      message: 'Workspace member added successfully',
       data: data,
     };
   }

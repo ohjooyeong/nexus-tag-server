@@ -280,4 +280,72 @@ export class WorkspaceService {
 
     return transformedMembers;
   }
+
+  async addWorkspaceMember(workspaceId: string, email: string, role: Role) {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // Find the workspace
+      const workspace = await queryRunner.manager.findOne(Workspace, {
+        where: { id: workspaceId },
+        relations: ['members'],
+      });
+
+      if (!workspace) {
+        throw new NotFoundException('Workspace not found');
+      }
+
+      // Find the user by email
+      const user = await queryRunner.manager.findOne(User, {
+        where: { email },
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      // Check if user is already a member
+      const existingMember = await queryRunner.manager.findOne(
+        WorkspaceMember,
+        {
+          where: {
+            workspace: { id: workspaceId },
+            user: { id: user.id },
+          },
+        },
+      );
+
+      if (existingMember) {
+        throw new BadRequestException(
+          'User is already a member of this workspace',
+        );
+      }
+
+      // Create new workspace member
+      const workspaceMember = this.workspaceMemberRepository.create({
+        workspace,
+        user,
+        role,
+      });
+
+      await queryRunner.manager.save(workspaceMember);
+      await queryRunner.commitTransaction();
+
+      return {
+        id: workspaceMember.id,
+        email: user.email,
+        username: user.username,
+        userId: user.id,
+        role: workspaceMember.role,
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
 }
