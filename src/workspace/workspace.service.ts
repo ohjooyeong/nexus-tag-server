@@ -433,7 +433,7 @@ export class WorkspaceService {
 
   async removeWorkspaceMember(
     workspaceId: string,
-    userIdToRemove: string,
+    emailToRemove: string,
     currentUser: User,
   ) {
     const queryRunner = this.dataSource.createQueryRunner();
@@ -447,7 +447,7 @@ export class WorkspaceService {
         {
           where: {
             workspace: { id: workspaceId },
-            user: { id: userIdToRemove },
+            user: { email: emailToRemove },
           },
           relations: ['user', 'workspace'],
         },
@@ -481,13 +481,10 @@ export class WorkspaceService {
       await queryRunner.commitTransaction();
 
       return {
-        message: 'Member removed successfully',
-        removedMember: {
-          id: memberToRemove.id,
-          email: memberToRemove.user.email,
-          username: memberToRemove.user.username,
-          userId: memberToRemove.user.id,
-        },
+        id: memberToRemove.id,
+        email: memberToRemove.user.email,
+        username: memberToRemove.user.username,
+        userId: memberToRemove.user.id,
       };
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -495,5 +492,23 @@ export class WorkspaceService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async getWorkspaceMemberRole(
+    workspaceId: string,
+    userId: string,
+  ): Promise<Role> {
+    const workspaceMember = await this.workspaceMemberRepository.findOne({
+      where: {
+        workspace: { id: workspaceId },
+        user: { id: userId },
+      },
+    });
+
+    if (!workspaceMember) {
+      throw new NotFoundException('Workspace member not found');
+    }
+
+    return workspaceMember.role;
   }
 }

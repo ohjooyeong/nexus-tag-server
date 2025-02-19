@@ -174,21 +174,37 @@ export class WorkspaceController {
     };
   }
 
-  @Delete(':workspaceId/members/:memberId')
+  @Delete(':workspaceId/members/')
   async removeWorkspaceMember(
     @Param('workspaceId') workspaceId: string,
-    @Param('memberId') memberId: string,
+    @Body() removeMemberDto: { email: string },
     @CurrentUser() user,
   ) {
-    await this.workspaceService.removeWorkspaceMember(
+    const data = await this.workspaceService.removeWorkspaceMember(
       workspaceId,
-      memberId,
+      removeMemberDto.email,
       user,
     );
     return {
       statusCode: HttpStatus.OK,
       message: 'Workspace member removed successfully',
-      data: null,
+      data: data,
+    };
+  }
+
+  @Get(':workspaceId/my-role')
+  async getMyWorkspaceRole(
+    @Param('workspaceId') workspaceId: string,
+    @CurrentUser() user: User,
+  ) {
+    const data = await this.workspaceService.getWorkspaceMemberRole(
+      workspaceId,
+      user.id,
+    );
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Workspace role found successfully',
+      data: data,
     };
   }
 }
