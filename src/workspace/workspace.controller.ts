@@ -135,19 +135,60 @@ export class WorkspaceController {
     };
   }
 
-  @Post('members')
+  @Put(':workspaceId/members')
+  async updateWorkspaceMember(
+    @Param('workspaceId') workspaceId: string,
+    @Body() updateMemberDto: { email: string; role: Role },
+    @CurrentUser() user,
+  ) {
+    console.log(updateMemberDto);
+    const data = await this.workspaceService.updateWorkspaceMember(
+      workspaceId,
+      updateMemberDto.email,
+      updateMemberDto.role,
+      user,
+    );
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Workspace member updated successfully',
+      data: data,
+    };
+  }
+
+  @Post(':workspaceId/members')
   async addWorkspaceMember(
-    @Body() addMemberDto: { email: string; role: Role; workspaceId: string },
+    @Param('workspaceId') workspaceId: string,
+    @Body() addMemberDto: { email: string; role: Role },
+    @CurrentUser() user,
   ) {
     const data = await this.workspaceService.addWorkspaceMember(
-      addMemberDto.workspaceId,
+      workspaceId,
       addMemberDto.email,
       addMemberDto.role,
+      user,
     );
     return {
       statusCode: HttpStatus.CREATED,
       message: 'Workspace member added successfully',
       data: data,
+    };
+  }
+
+  @Delete(':workspaceId/members/:memberId')
+  async removeWorkspaceMember(
+    @Param('workspaceId') workspaceId: string,
+    @Param('memberId') memberId: string,
+    @CurrentUser() user,
+  ) {
+    await this.workspaceService.removeWorkspaceMember(
+      workspaceId,
+      memberId,
+      user,
+    );
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Workspace member removed successfully',
+      data: null,
     };
   }
 }

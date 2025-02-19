@@ -281,7 +281,12 @@ export class WorkspaceService {
     return transformedMembers;
   }
 
-  async addWorkspaceMember(workspaceId: string, email: string, role: Role) {
+  async addWorkspaceMember(
+    workspaceId: string,
+    email: string,
+    role: Role,
+    currentUser: User,
+  ) {
     const queryRunner = this.dataSource.createQueryRunner();
 
     await queryRunner.connect();
@@ -296,6 +301,21 @@ export class WorkspaceService {
 
       if (!workspace) {
         throw new NotFoundException('Workspace not found');
+      }
+
+      // Check if the requesting user has admin permissions
+      const requestingMember = await queryRunner.manager.findOne(
+        WorkspaceMember,
+        {
+          where: {
+            workspace: { id: workspaceId },
+            user: { id: currentUser.id },
+          },
+        },
+      );
+
+      if (!requestingMember || requestingMember.role !== Role.OWNER) {
+        throw new ForbiddenException('Only workspace owners can add members');
       }
 
       // Find the user by email
@@ -340,6 +360,134 @@ export class WorkspaceService {
         username: user.username,
         userId: user.id,
         role: workspaceMember.role,
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async updateWorkspaceMember(
+    workspaceId: string,
+    email: string,
+    role: Role,
+    currentUser: User,
+  ) {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const workspaceMember = await queryRunner.manager.findOne(
+        WorkspaceMember,
+        {
+          where: {
+            workspace: { id: workspaceId },
+            user: { email },
+          },
+          relations: ['user', 'workspace'],
+        },
+      );
+
+      if (!workspaceMember) {
+        throw new NotFoundException('Workspace member not found');
+      }
+
+      const requestingMember = await queryRunner.manager.findOne(
+        WorkspaceMember,
+        {
+          where: {
+            workspace: { id: workspaceId },
+            user: { id: currentUser.id },
+          },
+        },
+      );
+
+      if (!requestingMember || requestingMember.role !== Role.OWNER) {
+        throw new ForbiddenException('Only workspace owners can add members');
+      }
+
+      workspaceMember.role = role;
+
+      await queryRunner.manager.save(workspaceMember);
+      await queryRunner.commitTransaction();
+
+      return {
+        id: workspaceMember.id,
+        email: workspaceMember.user.email,
+        username: workspaceMember.user.username,
+        userId: workspaceMember.user.id,
+        role: workspaceMember.role,
+      };
+    } catch (error) {
+      console.error(error);
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async removeWorkspaceMember(
+    workspaceId: string,
+    userIdToRemove: string,
+    currentUser: User,
+  ) {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const memberToRemove = await queryRunner.manager.findOne(
+        WorkspaceMember,
+        {
+          where: {
+            workspace: { id: workspaceId },
+            user: { id: userIdToRemove },
+          },
+          relations: ['user', 'workspace'],
+        },
+      );
+
+      if (!memberToRemove) {
+        throw new NotFoundException('Workspace member not found');
+      }
+
+      const requestingMember = await queryRunner.manager.findOne(
+        WorkspaceMember,
+        {
+          where: {
+            workspace: { id: workspaceId },
+            user: { id: currentUser.id },
+          },
+        },
+      );
+
+      if (!requestingMember || requestingMember.role !== Role.OWNER) {
+        throw new ForbiddenException(
+          'Only workspace owners can remove members',
+        );
+      }
+
+      if (memberToRemove.role === Role.OWNER) {
+        throw new ForbiddenException('Cannot remove the workspace owner');
+      }
+
+      await queryRunner.manager.remove(memberToRemove);
+      await queryRunner.commitTransaction();
+
+      return {
+        message: 'Member removed successfully',
+        removedMember: {
+          id: memberToRemove.id,
+          email: memberToRemove.user.email,
+          username: memberToRemove.user.username,
+          userId: memberToRemove.user.id,
+        },
       };
     } catch (error) {
       await queryRunner.rollbackTransaction();
