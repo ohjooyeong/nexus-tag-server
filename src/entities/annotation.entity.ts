@@ -9,7 +9,8 @@ import {
 } from 'typeorm';
 import { DataItem } from './data-item.entity';
 import { ClassLabel } from './class-label.entity';
-import { User } from './user.entity';
+
+import { WorkspaceMember } from './workspace-member.entity';
 
 @Entity()
 export class Annotation extends BaseEntity {
@@ -29,11 +30,11 @@ export class Annotation extends BaseEntity {
   })
   classLabel: ClassLabel;
 
-  @ManyToOne(() => User, (user) => user.annotations, {
+  @ManyToOne(() => WorkspaceMember, (member) => member.annotations, {
     nullable: false,
     onDelete: 'CASCADE',
   })
-  createdBy: User;
+  createdBy: WorkspaceMember;
 
   @CreateDateColumn({ comment: '생성일' })
   createdAt: Date;

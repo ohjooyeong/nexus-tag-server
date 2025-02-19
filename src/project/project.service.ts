@@ -9,6 +9,7 @@ import { Project } from 'src/entities/project.entity';
 import { Repository } from 'typeorm';
 import { Workspace } from 'src/entities/workspace.entity';
 import { User } from 'src/entities/user.entity';
+import { WorkspaceMember } from 'src/entities/workspace-member.entity';
 
 @Injectable()
 export class ProjectService {
@@ -17,6 +18,8 @@ export class ProjectService {
     private readonly projectRepository: Repository<Project>,
     @InjectRepository(Workspace)
     private readonly workspaceRepository: Repository<Workspace>,
+    @InjectRepository(WorkspaceMember)
+    private readonly workspaceMemberRepository: Repository<WorkspaceMember>,
   ) {}
 
   async createProject(createProjectDto: CreateProjectDto, user: User) {
@@ -31,11 +34,19 @@ export class ProjectService {
         throw new NotFoundException('Workspace not found');
       }
 
+      const workspaceMember = await this.workspaceMemberRepository.findOne({
+        where: { workspace: { id: workspaceId }, user: { id: user.id } },
+      });
+
+      if (!workspaceMember) {
+        throw new NotFoundException('Workspace member not found');
+      }
+
       const project = this.projectRepository.create({
         name,
         description,
         workspace,
-        createdBy: user,
+        createdBy: workspaceMember,
       });
 
       const resultProject = await this.projectRepository.save(project);

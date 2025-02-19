@@ -71,16 +71,4 @@ export class User extends BaseEntity {
 
   @ManyToOne(() => Workspace, { nullable: true, eager: true })
   defaultWorkspace: Workspace;
-
-  @OneToMany(() => Project, (project) => project.createdBy)
-  projects: Project[];
-
-  @OneToMany(() => Dataset, (dataset) => dataset.createdBy)
-  datasets: Dataset[];
-
-  @OneToMany(() => DataItem, (dataItem) => dataItem.createdBy)
-  dataItems: DataItem[];
-
-  @OneToMany(() => Annotation, (annotation) => annotation.createdBy)
-  annotations: Annotation[];
 }

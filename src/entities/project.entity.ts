@@ -12,6 +12,7 @@ import { Workspace } from 'src/entities/workspace.entity';
 import { Dataset } from './dataset.entity';
 import { ClassLabel } from './class-label.entity';
 import { User } from './user.entity';
+import { WorkspaceMember } from './workspace-member.entity';
 
 export enum CONTENT_TYPE {
   IMAGE = 'IMAGE',
@@ -54,11 +55,11 @@ export class Project extends BaseEntity {
   })
   classLabels?: ClassLabel[];
 
-  @ManyToOne(() => User, (user) => user.projects, {
+  @ManyToOne(() => WorkspaceMember, (member) => member.projects, {
     nullable: false,
     onDelete: 'CASCADE',
   })
-  createdBy: User;
+  createdBy: WorkspaceMember;
 
   @CreateDateColumn({ comment: '생성일' })
   createdAt: Date;

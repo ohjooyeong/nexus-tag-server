@@ -11,6 +11,7 @@ import {
 import { Dataset } from './dataset.entity';
 import { Annotation } from './annotation.entity';
 import { User } from './user.entity';
+import { WorkspaceMember } from './workspace-member.entity';
 
 @Entity()
 export class DataItem extends BaseEntity {
@@ -25,11 +26,11 @@ export class DataItem extends BaseEntity {
   })
   dataset: Dataset;
 
-  @ManyToOne(() => User, (user) => user.dataItems, {
+  @ManyToOne(() => WorkspaceMember, (member) => member.dataItems, {
     nullable: false,
     onDelete: 'CASCADE',
   })
-  createdBy: User;
+  createdBy: WorkspaceMember;
 
   @OneToMany(() => Annotation, (annotation) => annotation.dataItem, {
     cascade: true,
