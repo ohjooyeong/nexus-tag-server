@@ -93,4 +93,22 @@ export class ProjectService {
 
     return { projects, total, page, limit };
   }
+
+  async findProjectById(projectId: string) {
+    try {
+      const project = await this.projectRepository.findOne({
+        where: { id: projectId },
+        relations: ['workspace', 'createdBy', 'createdBy.user'],
+      });
+
+      if (!project) {
+        throw new NotFoundException('Project not found');
+      }
+
+      return project;
+    } catch (error) {
+      console.error('Unexpected error while finding project:', error);
+      throw new InternalServerErrorException('An unexpected error occurred');
+    }
+  }
 }

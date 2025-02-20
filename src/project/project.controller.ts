@@ -59,4 +59,15 @@ export class ProjectController {
       data: projects,
     };
   }
+
+  @Get(':id')
+  async getProjectInfo(@Param('id') id: string) {
+    const project = await this.projectService.findProjectById(id);
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Project info found successfully',
+      data: project,
+    };
+  }
 }
