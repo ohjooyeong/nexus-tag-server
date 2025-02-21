@@ -10,8 +10,16 @@ import {
 } from 'typeorm';
 import { Dataset } from './dataset.entity';
 import { Annotation } from './annotation.entity';
-import { User } from './user.entity';
 import { WorkspaceMember } from './workspace-member.entity';
+
+export enum Status {
+  NEW = 'NEW',
+  IN_PROGRESS = 'IN_PROGRESS',
+  TO_REVIEW = 'TO_REVIEW',
+  DONE = 'DONE',
+  SKIPPED = 'SKIPPED',
+  COMPLETED = 'COMPLETED',
+}
 
 @Entity()
 export class DataItem extends BaseEntity {
@@ -20,6 +28,13 @@ export class DataItem extends BaseEntity {
 
   @Column()
   fileUrl: string;
+
+  @Column({
+    type: 'enum',
+    enum: Status,
+    default: Status.NEW,
+  })
+  status: Status;
 
   @ManyToOne(() => Dataset, (dataset) => dataset.dataItems, {
     onDelete: 'CASCADE',
