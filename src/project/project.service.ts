@@ -3,7 +3,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateProjectDto } from './dto/create-project.dto';
+
 import { InjectRepository } from '@nestjs/typeorm';
 import { Project } from 'src/entities/project.entity';
 import { Repository } from 'typeorm';
@@ -22,7 +22,14 @@ export class ProjectService {
     private readonly workspaceMemberRepository: Repository<WorkspaceMember>,
   ) {}
 
-  async createProject(createProjectDto: CreateProjectDto, user: User) {
+  async createProject(
+    createProjectDto: {
+      name: string;
+      description: string;
+      workspaceId: string;
+    },
+    user: User,
+  ) {
     try {
       const { workspaceId, name, description } = createProjectDto;
 

@@ -16,18 +16,19 @@ import { User } from 'src/entities/user.entity';
 import { CurrentUser } from 'src/auth/current-user.decorator';
 import { JwtAuthGuard } from 'src/auth/guard/jwt.guard';
 
-@Controller('/projects')
+@Controller('/workspaces/:workspaceId/projects')
 @UseGuards(JwtAuthGuard)
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
   @Post()
   async createProject(
+    @Param('workspaceId') workspaceId: string,
     @CurrentUser() user: User,
     @Body() createProjectDto: CreateProjectDto,
   ) {
     const project = await this.projectService.createProject(
-      createProjectDto,
+      { ...createProjectDto, workspaceId },
       user,
     );
     return {
@@ -39,7 +40,7 @@ export class ProjectController {
 
   @Get()
   async getProjects(
-    @Query('workspaceId') workspaceId: string,
+    @Param('workspaceId') workspaceId: string,
     @Query('search') search?: string,
     @Query('page') page = 1,
     @Query('limit') limit = 20,
@@ -60,8 +61,8 @@ export class ProjectController {
     };
   }
 
-  @Get(':id')
-  async getProjectInfo(@Param('id') id: string) {
+  @Get(':projectId')
+  async getProjectInfo(@Param('projectId') id: string) {
     const project = await this.projectService.findProjectById(id);
 
     return {

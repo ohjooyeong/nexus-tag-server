@@ -13,8 +13,4 @@ export class CreateProjectDto {
   @IsEnum(CONTENT_TYPE)
   @IsOptional()
   content_type?: CONTENT_TYPE;
-
-  @IsString()
-  @IsNotEmpty()
-  workspaceId: string;
 }
