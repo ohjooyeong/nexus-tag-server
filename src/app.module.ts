@@ -21,6 +21,7 @@ import { Annotation } from './entities/annotation.entity';
 import { ClassLabel } from './entities/class-label.entity';
 import { DataItem } from './entities/data-item.entity';
 import { Dataset } from './entities/dataset.entity';
+import { DatasetModule } from './project/dataset/dataset.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { Dataset } from './entities/dataset.entity';
     ProfileModule,
     MailModule,
     EmailVerificationModule,
+    DatasetModule,
   ],
   controllers: [AppController],
   providers: [AppService],
