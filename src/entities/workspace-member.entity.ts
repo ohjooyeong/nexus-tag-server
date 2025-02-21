@@ -12,7 +12,6 @@ import {
 import { Workspace } from './workspace.entity';
 import { User } from 'src/entities/user.entity';
 import { Project } from './project.entity';
-import { Dataset } from './dataset.entity';
 import { DataItem } from './data-item.entity';
 import { Annotation } from './annotation.entity';
 
@@ -56,9 +55,6 @@ export class WorkspaceMember {
 
   @OneToMany(() => Project, (project) => project.createdBy)
   projects: Project[];
-
-  @OneToMany(() => Dataset, (dataset) => dataset.createdBy)
-  datasets: Dataset[];
 
   @OneToMany(() => DataItem, (dataItem) => dataItem.createdBy)
   dataItems: DataItem[];

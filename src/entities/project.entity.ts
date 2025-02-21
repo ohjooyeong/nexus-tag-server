@@ -11,7 +11,6 @@ import {
 import { Workspace } from 'src/entities/workspace.entity';
 import { Dataset } from './dataset.entity';
 import { ClassLabel } from './class-label.entity';
-import { User } from './user.entity';
 import { WorkspaceMember } from './workspace-member.entity';
 
 export enum CONTENT_TYPE {
