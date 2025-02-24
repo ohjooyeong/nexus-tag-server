@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpStatus,
   Param,
   Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -121,6 +123,50 @@ export class DatasetController {
       statusCode: HttpStatus.CREATED,
       message: 'Dataset created successfully',
       data: dataset,
+    };
+  }
+
+  @Put(':datasetId')
+  async updateDataset(
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('datasetId') datasetId: string,
+    @Body() updateDatasetDto: { name: string },
+    @CurrentUser() user: User,
+  ) {
+    const dataset = await this.datasetService.updateDataset(
+      workspaceId,
+      projectId,
+      datasetId,
+      user,
+      updateDatasetDto,
+    );
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Dataset updated successfully',
+      data: dataset,
+    };
+  }
+
+  @Delete(':datasetId')
+  async deleteDataset(
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('datasetId') datasetId: string,
+    @CurrentUser() user: User,
+  ) {
+    await this.datasetService.deleteDataset(
+      workspaceId,
+      projectId,
+      datasetId,
+      user,
+    );
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Dataset deleted successfully',
+      data: null,
     };
   }
 }

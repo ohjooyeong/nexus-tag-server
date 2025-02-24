@@ -8,6 +8,7 @@ import { Project } from 'src/entities/project.entity';
 import { DatasetController } from './dataset.controller';
 import { DatasetService } from './dataset.service';
 import { Dataset } from 'src/entities/dataset.entity';
+import { DataItem } from 'src/entities/data-item.entity';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { Dataset } from 'src/entities/dataset.entity';
       User,
       WorkspaceMember,
       Dataset,
+      DataItem,
     ]),
     AuthModule,
   ],

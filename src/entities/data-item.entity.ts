@@ -27,6 +27,9 @@ export class DataItem extends BaseEntity {
   id: string;
 
   @Column()
+  name: string;
+
+  @Column()
   fileUrl: string;
 
   @Column({
@@ -40,12 +43,6 @@ export class DataItem extends BaseEntity {
     onDelete: 'CASCADE',
   })
   dataset: Dataset;
-
-  @ManyToOne(() => WorkspaceMember, (member) => member.dataItems, {
-    nullable: false,
-    onDelete: 'CASCADE',
-  })
-  createdBy: WorkspaceMember;
 
   @OneToMany(() => Annotation, (annotation) => annotation.dataItem, {
     cascade: true,

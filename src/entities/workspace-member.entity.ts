@@ -56,9 +56,6 @@ export class WorkspaceMember {
   @OneToMany(() => Project, (project) => project.createdBy)
   projects: Project[];
 
-  @OneToMany(() => DataItem, (dataItem) => dataItem.createdBy)
-  dataItems: DataItem[];
-
   @OneToMany(() => Annotation, (annotation) => annotation.createdBy)
   annotations: Annotation[];
 }
