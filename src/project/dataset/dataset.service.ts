@@ -6,6 +6,9 @@ import { Project } from 'src/entities/project.entity';
 import { User } from 'src/entities/user.entity';
 import { WorkspaceMember } from 'src/entities/workspace-member.entity';
 import { Repository } from 'typeorm';
+import * as fs from 'fs';
+import * as path from 'path';
+import 'multer';
 
 @Injectable()
 export class DatasetService {
@@ -75,7 +78,6 @@ export class DatasetService {
       throw new Error('Failed to fetch dataset statistics');
     }
   }
-
   async getDatasetItems(
     projectId: string,
     datasetId: string,
@@ -84,26 +86,18 @@ export class DatasetService {
     order: 'asc' | 'desc' = 'desc',
   ) {
     try {
-      const project = await this.projectRepository.findOne({
-        where: { id: projectId },
-      });
-
-      if (!project) {
-        throw new Error('project not found');
-      }
-
       const skip = (page - 1) * limit;
 
-      const queryBuilder = this.datasetRepository
-        .createQueryBuilder('dataset')
-        .innerJoinAndSelect('dataset.dataItems', 'dataItems')
+      const queryBuilder = this.dataItemRepository
+        .createQueryBuilder('dataItem')
+        .innerJoin('dataItem.dataset', 'dataset')
         .where('dataset.id = :datasetId', { datasetId })
         .andWhere('dataset.project.id = :projectId', { projectId });
 
       const total = await queryBuilder.getCount();
 
       const items = await queryBuilder
-        .orderBy('dataItems.createdAt', order.toUpperCase() as 'ASC' | 'DESC')
+        .orderBy('dataItem.createdAt', order.toUpperCase() as 'ASC' | 'DESC')
         .skip(skip)
         .take(limit)
         .getMany();
@@ -119,7 +113,6 @@ export class DatasetService {
       throw new Error('Failed to fetch dataset items');
     }
   }
-
   async getAllDatasetItems(
     projectId: string,
     page: number,
@@ -127,25 +120,17 @@ export class DatasetService {
     order: 'asc' | 'desc' = 'desc',
   ) {
     try {
-      const project = await this.projectRepository.findOne({
-        where: { id: projectId },
-      });
-
-      if (!project) {
-        throw new Error('project not found');
-      }
-
       const skip = (page - 1) * limit;
 
-      const queryBuilder = this.datasetRepository
-        .createQueryBuilder('dataset')
-        .innerJoinAndSelect('dataset.dataItems', 'dataItems')
+      const queryBuilder = this.dataItemRepository
+        .createQueryBuilder('dataItem')
+        .innerJoin('dataItem.dataset', 'dataset')
         .where('dataset.project.id = :projectId', { projectId });
 
       const total = await queryBuilder.getCount();
 
       const items = await queryBuilder
-        .orderBy('dataItems.createdAt', order.toUpperCase() as 'ASC' | 'DESC')
+        .orderBy('dataItem.createdAt', order.toUpperCase() as 'ASC' | 'DESC')
         .skip(skip)
         .take(limit)
         .getMany();
@@ -161,7 +146,6 @@ export class DatasetService {
       throw new Error('Failed to fetch dataset items');
     }
   }
-
   async createDataset(
     projectId: string,
     workspaceId: string,
@@ -204,7 +188,6 @@ export class DatasetService {
       throw new Error('Failed to fetch create dataset');
     }
   }
-
   async updateDataset(
     workspaceId: string,
     projectId: string,
@@ -243,7 +226,6 @@ export class DatasetService {
       throw new Error('Failed to fetch update dataset');
     }
   }
-
   async deleteDataset(
     workspaceId: string,
     projectId: string,
@@ -257,7 +239,6 @@ export class DatasetService {
           workspace: { id: workspaceId.trim() },
         },
       });
-      console.log(user, workspaceId, workspaceMember);
 
       if (!workspaceMember) {
         throw new NotFoundException('Workspace member not found');
@@ -281,6 +262,82 @@ export class DatasetService {
     } catch (error) {
       console.error('Error deleting dataset:', error);
       throw new Error('Failed to fetch delete dataset');
+    }
+  }
+  async uploadDataItem(
+    workspaceId: string,
+    projectId: string,
+    datasetId: string,
+    user: User,
+    files: Express.Multer.File[],
+  ) {
+    try {
+      const workspaceMember = await this.workspaceMemberRepository.findOne({
+        where: { user: { id: user.id }, workspace: { id: workspaceId } },
+      });
+
+      if (!workspaceMember) {
+        throw new NotFoundException('Workspace member not found');
+      }
+
+      if (!['OWNER', 'MANAGER'].includes(workspaceMember.role)) {
+        throw new NotFoundException('Insufficient permissions');
+      }
+
+      const dataset = await this.datasetRepository.findOne({
+        where: { id: datasetId, project: { id: projectId } },
+      });
+
+      if (!dataset) {
+        throw new NotFoundException('Dataset not found');
+      }
+
+      console.log('Controller received:', {
+        datasetId,
+        workspaceId,
+        projectId,
+        filesCount: files?.length,
+      });
+
+      const savedDataItems = await Promise.all(
+        files.map(async (file) => {
+          const fileExtension = file.originalname.split('.').pop();
+          const uniqueFilename = `${Date.now()}-${Math.random()
+            .toString(36)
+            .substring(7)}.${fileExtension}`;
+
+          const baseUploadDir = path.join(process.cwd(), 'uploads');
+          const projectDir = path.join(baseUploadDir, projectId);
+          const datasetDir = path.join(projectDir, datasetId);
+          const yearMonth = new Date().toISOString().slice(0, 7);
+          const finalDir = path.join(datasetDir, yearMonth);
+
+          if (!fs.existsSync(finalDir)) {
+            fs.mkdirSync(finalDir, { recursive: true });
+          }
+
+          const filePath = path.join(finalDir, uniqueFilename);
+          fs.writeFileSync(filePath, file.buffer);
+
+          const dataItem = this.dataItemRepository.create({
+            dataset,
+            name: file.originalname,
+            filename: uniqueFilename,
+            originalName: file.originalname,
+            path: filePath,
+            fileUrl: `/uploads/${projectId}/${datasetId}/${yearMonth}/${uniqueFilename}`,
+            mimeType: file.mimetype,
+            size: file.size,
+          });
+
+          return await this.dataItemRepository.save(dataItem);
+        }),
+      );
+
+      return savedDataItems;
+    } catch (error) {
+      console.error('Error uploading data items:', error);
+      throw new Error('Failed to upload data items');
     }
   }
 }

@@ -10,7 +10,6 @@ import {
 } from 'typeorm';
 import { Dataset } from './dataset.entity';
 import { Annotation } from './annotation.entity';
-import { WorkspaceMember } from './workspace-member.entity';
 
 export enum Status {
   NEW = 'NEW',
@@ -31,6 +30,21 @@ export class DataItem extends BaseEntity {
 
   @Column()
   fileUrl: string;
+
+  @Column()
+  originalName: string;
+
+  @Column()
+  filename: string;
+
+  @Column()
+  path: string;
+
+  @Column()
+  mimeType: string;
+
+  @Column('bigint')
+  size: number;
 
   @Column({
     type: 'enum',

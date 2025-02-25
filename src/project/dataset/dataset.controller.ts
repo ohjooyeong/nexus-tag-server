@@ -8,12 +8,15 @@ import {
   Post,
   Put,
   Query,
+  UploadedFiles,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guard/jwt.guard';
 import { DatasetService } from './dataset.service';
 import { CurrentUser } from 'src/auth/current-user.decorator';
 import { User } from 'src/entities/user.entity';
+import { FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('/workspaces/:workspaceId/projects/:projectId/datasets')
 @UseGuards(JwtAuthGuard)
@@ -167,6 +170,29 @@ export class DatasetController {
       statusCode: HttpStatus.OK,
       message: 'Dataset deleted successfully',
       data: null,
+    };
+  }
+
+  @Post(':datasetId/upload')
+  @UseInterceptors(FilesInterceptor('files', 100))
+  async uploadDataItem(
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('datasetId') datasetId: string,
+    @CurrentUser() user: User,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    const dataItems = await this.datasetService.uploadDataItem(
+      workspaceId,
+      projectId,
+      datasetId,
+      user,
+      files,
+    );
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Dataset deleted successfully',
+      data: dataItems,
     };
   }
 }
