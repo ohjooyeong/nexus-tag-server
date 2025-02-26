@@ -22,6 +22,7 @@ import { ClassLabel } from './entities/class-label.entity';
 import { DataItem } from './entities/data-item.entity';
 import { Dataset } from './entities/dataset.entity';
 import { DatasetModule } from './project/dataset/dataset.module';
+import { DataItemModule } from './project/data-item/data-item.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { DatasetModule } from './project/dataset/dataset.module';
     MailModule,
     EmailVerificationModule,
     DatasetModule,
+    DataItemModule,
   ],
   controllers: [AppController],
   providers: [AppService],

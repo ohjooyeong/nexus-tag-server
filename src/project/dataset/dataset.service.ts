@@ -5,7 +5,7 @@ import { Dataset } from 'src/entities/dataset.entity';
 import { Project } from 'src/entities/project.entity';
 import { User } from 'src/entities/user.entity';
 import { WorkspaceMember } from 'src/entities/workspace-member.entity';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
 import 'multer';
@@ -78,6 +78,7 @@ export class DatasetService {
       throw new Error('Failed to fetch dataset statistics');
     }
   }
+
   async getDatasetItems(
     projectId: string,
     datasetId: string,
@@ -90,7 +91,7 @@ export class DatasetService {
 
       const queryBuilder = this.dataItemRepository
         .createQueryBuilder('dataItem')
-        .innerJoin('dataItem.dataset', 'dataset')
+        .innerJoinAndSelect('dataItem.dataset', 'dataset')
         .where('dataset.id = :datasetId', { datasetId })
         .andWhere('dataset.project.id = :projectId', { projectId });
 
@@ -113,6 +114,7 @@ export class DatasetService {
       throw new Error('Failed to fetch dataset items');
     }
   }
+
   async getAllDatasetItems(
     projectId: string,
     page: number,
@@ -124,7 +126,7 @@ export class DatasetService {
 
       const queryBuilder = this.dataItemRepository
         .createQueryBuilder('dataItem')
-        .innerJoin('dataItem.dataset', 'dataset')
+        .innerJoinAndSelect('dataItem.dataset', 'dataset')
         .where('dataset.project.id = :projectId', { projectId });
 
       const total = await queryBuilder.getCount();
