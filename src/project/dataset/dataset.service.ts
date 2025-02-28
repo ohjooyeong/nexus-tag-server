@@ -294,16 +294,37 @@ export class DatasetService {
         throw new NotFoundException('Dataset not found');
       }
 
-      console.log('Controller received:', {
-        datasetId,
-        workspaceId,
-        projectId,
-        filesCount: files?.length,
-      });
+      const allowedMimeTypes = [
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+        'image/svg+xml',
+      ];
 
       const savedDataItems = await Promise.all(
         files.map(async (file) => {
-          const fileExtension = file.originalname.split('.').pop();
+          // 이미지 타입 체크
+          if (!allowedMimeTypes.includes(file.mimetype)) {
+            throw new Error(`Unsupported file type: ${file.mimetype}`);
+          }
+
+          // 한글 파일명을 안전하게 처리
+          const safeOriginalName = Buffer.from(
+            file.originalname,
+            'latin1',
+          ).toString('utf8');
+
+          // 파일명과 확장자 분리
+          const lastDotIndex = safeOriginalName.lastIndexOf('.');
+          const nameWithoutExt =
+            lastDotIndex !== -1
+              ? safeOriginalName.substring(0, lastDotIndex)
+              : safeOriginalName;
+          const fileExtension =
+            lastDotIndex !== -1
+              ? safeOriginalName.substring(lastDotIndex + 1)
+              : '';
+
           const uniqueFilename = `${Date.now()}-${Math.random()
             .toString(36)
             .substring(7)}.${fileExtension}`;
@@ -323,9 +344,9 @@ export class DatasetService {
 
           const dataItem = this.dataItemRepository.create({
             dataset,
-            name: file.originalname,
-            filename: uniqueFilename,
-            originalName: file.originalname,
+            name: nameWithoutExt, // 확장자 제외한 이름
+            filename: uniqueFilename, // 실제 저장되는 파일명
+            originalName: safeOriginalName, // 원본 파일명 (확장자 포함)
             path: filePath,
             fileUrl: `/uploads/${projectId}/${datasetId}/${yearMonth}/${uniqueFilename}`,
             mimeType: file.mimetype,

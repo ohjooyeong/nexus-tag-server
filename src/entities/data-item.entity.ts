@@ -25,19 +25,19 @@ export class DataItem extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ comment: '데이터 아이템 이름' })
   name: string;
 
-  @Column()
+  @Column({ comment: '클라이언트에서 불러오는 파일 url' })
   fileUrl: string;
 
-  @Column()
+  @Column({ comment: '원본 파일명' })
   originalName: string;
 
-  @Column()
+  @Column({ comment: '실제 저장되는 유니크 파일명' })
   filename: string;
 
-  @Column()
+  @Column({ comment: '실제 저장되는 파일 경로' })
   path: string;
 
   @Column()
