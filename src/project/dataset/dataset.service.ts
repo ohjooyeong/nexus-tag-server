@@ -298,7 +298,11 @@ export class DatasetService {
         'image/jpeg',
         'image/png',
         'image/webp',
+        'image/bmp',
+        'image/tiff',
         'image/svg+xml',
+        'image/heic',
+        'image/heif',
       ];
 
       const savedDataItems = await Promise.all(
