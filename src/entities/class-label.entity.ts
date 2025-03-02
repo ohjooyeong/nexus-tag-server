@@ -11,6 +11,11 @@ import {
 import { Project } from './project.entity';
 import { Annotation } from './annotation.entity';
 
+export enum ClassType {
+  SEMANTIC = 'SEMANTIC',
+  OBJECT = 'OBJECT',
+}
+
 @Entity()
 export class ClassLabel extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -18,6 +23,12 @@ export class ClassLabel extends BaseEntity {
 
   @Column()
   name: string;
+
+  @Column({ enum: ClassType, default: ClassType.SEMANTIC })
+  type: ClassType;
+
+  @Column({ nullable: true })
+  color: string;
 
   @ManyToOne(() => Project, (project) => project.classLabels, {
     onDelete: 'CASCADE',

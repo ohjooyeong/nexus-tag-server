@@ -20,13 +20,22 @@ async function bootstrap() {
     }),
   );
   // 정적 파일 제공 설정
-  app.use('/uploads', express.static(join(process.cwd(), 'uploads')));
 
   app.enableCors({
     origin: ['http://localhost:3000'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true, // 쿠키 전송 허용
   });
+  // Static 파일 서빙 설정
+  app.use(
+    '/uploads',
+    (req, res, next) => {
+      res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+      res.header('Access-Control-Allow-Credentials', 'true');
+      next();
+    },
+    express.static(join(process.cwd(), 'uploads')),
+  );
   await app.listen(8080);
 }
 bootstrap();
