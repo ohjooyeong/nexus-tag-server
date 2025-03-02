@@ -41,6 +41,27 @@ export class DataItemController {
     };
   }
 
+  @Get(':itemId')
+  async getDataItem(
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('itemId') itemId: string,
+    @CurrentUser() user: User,
+  ) {
+    const dataItems = await this.dataItemService.getDataItem(
+      workspaceId,
+      projectId,
+      itemId,
+      user,
+    );
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Data item retrieved successfully',
+      data: dataItems,
+    };
+  }
+
   @Put(':itemId')
   async updateDataItem(
     @Param('workspaceId') workspaceId: string,

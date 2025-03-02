@@ -18,6 +18,54 @@ export class DataItemService {
     private readonly dataItemRepository: Repository<DataItem>,
   ) {}
 
+  async getDataItem(
+    workspaceId: string,
+    projectId: string,
+    itemId: string,
+    user: User,
+  ) {
+    try {
+      const workspaceMember = await this.workspaceMemberRepository.findOne({
+        where: { user: { id: user.id }, workspace: { id: workspaceId } },
+      });
+
+      if (!workspaceMember) {
+        throw new NotFoundException('Workspace member not found');
+      }
+
+      const project = await this.projectRepository.findOne({
+        where: { id: projectId },
+        relations: ['workspace'],
+      });
+
+      if (!project) {
+        throw new NotFoundException('Project not found');
+      }
+
+      if (project.workspace.id !== workspaceId) {
+        throw new NotFoundException(
+          'Project does not belong to this workspace',
+        );
+      }
+
+      const dataItem = await this.dataItemRepository.findOne({
+        where: {
+          id: itemId,
+        },
+        relations: ['dataset', 'dataset.project'],
+      });
+
+      if (!dataItem) {
+        throw new NotFoundException('Data item not found');
+      }
+
+      return dataItem;
+    } catch (error) {
+      console.error('Error getting data item:', error);
+      throw new Error('Failed to get data item');
+    }
+  }
+
   async updateDataItem(
     workspaceId: string,
     projectId: string,
