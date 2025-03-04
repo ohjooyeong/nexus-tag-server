@@ -1,9 +1,10 @@
 import {
+  Body,
   Controller,
   Get,
   HttpStatus,
   Param,
-  Query,
+  Post,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guard/jwt.guard';
@@ -17,25 +18,48 @@ import { ClassType } from 'src/entities/class-label.entity';
 export class ClassLabelController {
   constructor(private readonly classLabelService: ClassLabelService) {}
 
-  @Get(':itemId')
+  @Get('')
   async getClassLabels(
     @Param('workspaceId') workspaceId: string,
     @Param('projectId') projectId: string,
-    @Param('itemId') itemId: string,
-    @Query('type') type: ClassType = ClassType.OBJECT,
     @CurrentUser() user: User,
   ) {
-    const classLabel = await this.classLabelService.getClassLabels(
+    const classLabels = await this.classLabelService.getClassLabels(
       workspaceId,
       projectId,
-      itemId,
       user,
-      type,
     );
 
     return {
       statusCode: HttpStatus.OK,
       message: 'class label list found successfully',
+      data: classLabels,
+    };
+  }
+
+  @Post('')
+  async createClassLabel(
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: User,
+    @Body()
+    createClassLabelDto: {
+      type: ClassType;
+      name: string;
+      description: string;
+      color: string;
+    },
+  ) {
+    const classLabel = await this.classLabelService.createClassLabel(
+      workspaceId,
+      projectId,
+      user,
+      createClassLabelDto,
+    );
+
+    return {
+      statusCode: HttpStatus.CREATED,
+      message: 'class label created successfully',
       data: classLabel,
     };
   }

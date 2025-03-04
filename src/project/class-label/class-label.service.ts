@@ -14,13 +14,7 @@ export class ClassLabelService {
     private readonly workspaceMemberRepository: Repository<WorkspaceMember>,
   ) {}
 
-  async getClassLabels(
-    workspaceId: string,
-    projectId: string,
-    itemId: string,
-    user: User,
-    type: ClassType,
-  ) {
+  async getClassLabels(workspaceId: string, projectId: string, user: User) {
     try {
       const workspaceMember = await this.workspaceMemberRepository.findOne({
         where: { user: { id: user.id }, workspace: { id: workspaceId } },
@@ -30,36 +24,62 @@ export class ClassLabelService {
         throw new NotFoundException('Workspace member not found');
       }
 
-      const classLabelsWithCount = await this.classLabelRepository
-        .createQueryBuilder('classLabel')
-        .leftJoin(
-          'annotation',
-          'annotation',
-          'annotation.classLabelId = classLabel.id AND annotation.dataItemId = :itemId',
-          { itemId },
-        )
-        .where('classLabel.projectId = :projectId', { projectId })
-        .andWhere('classLabel.type = :type', { type })
-        .select([
-          'classLabel.id',
-          'classLabel.name',
-          'classLabel.color',
-          'COUNT(annotation.id) as annotationCount',
-        ])
-        .groupBy('classLabel.id')
-        .orderBy('classLabel.createdAt', 'DESC') // 생성일자 기
-        .getRawMany();
+      const classLabels = await this.classLabelRepository.find({
+        where: {
+          project: { id: projectId },
+        },
+        order: { createdAt: 'ASC' },
+      });
 
-      return classLabelsWithCount.map((label) => ({
-        id: label.classLabel_id,
-        name: label.classLabel_name,
-        color: label.classLabel_color,
-        type: label.classLabel_type,
-        annotationCount: parseInt(label.annotationCount),
-      }));
+      return classLabels;
     } catch (error) {
       console.error('Error getting classLabels:', error);
       throw new Error('Failed to fetch classLabels');
+    }
+  }
+
+  async createClassLabel(
+    workspaceId: string,
+    projectId: string,
+    user: User,
+    createClassLabelDto: {
+      name: string;
+      description: string;
+      type: ClassType;
+      color: string;
+    },
+  ) {
+    const { name, description, type, color } = createClassLabelDto;
+
+    try {
+      const workspaceMember = await this.workspaceMemberRepository.findOne({
+        where: { user: { id: user.id }, workspace: { id: workspaceId } },
+      });
+
+      if (!workspaceMember) {
+        throw new NotFoundException('Workspace member not found');
+      }
+
+      if (!['OWNER', 'MANAGER'].includes(workspaceMember.role)) {
+        throw new NotFoundException('Insufficient permissions');
+      }
+
+      const newClassLabel = this.classLabelRepository.create({
+        name,
+        description,
+        type,
+        color,
+        project: { id: projectId },
+      });
+
+      const savedClassLabel = await this.classLabelRepository.save(
+        newClassLabel,
+      );
+
+      return savedClassLabel;
+    } catch (error) {
+      console.error('Error creating classLabel:', error);
+      throw new Error('Failed to create classLabel');
     }
   }
 }
