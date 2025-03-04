@@ -24,10 +24,13 @@ export class ClassLabel extends BaseEntity {
   @Column()
   name: string;
 
+  @Column({ nullable: true })
+  description: string;
+
   @Column({ enum: ClassType, default: ClassType.SEMANTIC })
   type: ClassType;
 
-  @Column({ nullable: true })
+  @Column()
   color: string;
 
   @ManyToOne(() => Project, (project) => project.classLabels, {
