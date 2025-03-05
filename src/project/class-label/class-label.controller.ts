@@ -5,6 +5,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Put,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guard/jwt.guard';
@@ -13,7 +14,7 @@ import { User } from 'src/entities/user.entity';
 import { CurrentUser } from 'src/auth/current-user.decorator';
 import { ClassType } from 'src/entities/class-label.entity';
 
-@Controller('/workspaces/:workspaceId/projects/:projectId/labels')
+@Controller('/workspaces/:workspaceId/projects/:projectId/class-labels')
 @UseGuards(JwtAuthGuard)
 export class ClassLabelController {
   constructor(private readonly classLabelService: ClassLabelService) {}
@@ -61,6 +62,35 @@ export class ClassLabelController {
       statusCode: HttpStatus.CREATED,
       message: 'class label created successfully',
       data: classLabel,
+    };
+  }
+
+  @Put(':classLabelId')
+  async updateClassLabel(
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('classLabelId') classLabelId: string,
+    @CurrentUser() user: User,
+    @Body()
+    updateClassLabelDto: {
+      type: ClassType;
+      name: string;
+      description: string;
+      color: string;
+    },
+  ) {
+    const updatedClassLabel = await this.classLabelService.updateClassLabel(
+      workspaceId,
+      projectId,
+      classLabelId,
+      user,
+      updateClassLabelDto,
+    );
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'class label updated successfully',
+      data: updatedClassLabel,
     };
   }
 }

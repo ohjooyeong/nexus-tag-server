@@ -82,4 +82,50 @@ export class ClassLabelService {
       throw new Error('Failed to create classLabel');
     }
   }
+
+  async updateClassLabel(
+    workspaceId: string,
+    projectId: string,
+    classLabelId: string,
+    user: User,
+    updateClassLabelDto: {
+      name?: string;
+      description?: string;
+      type?: ClassType;
+      color?: string;
+    },
+  ) {
+    try {
+      const workspaceMember = await this.workspaceMemberRepository.findOne({
+        where: { user: { id: user.id }, workspace: { id: workspaceId } },
+      });
+
+      if (!workspaceMember) {
+        throw new NotFoundException('Workspace member not found');
+      }
+
+      if (!['OWNER', 'MANAGER'].includes(workspaceMember.role)) {
+        throw new NotFoundException('Insufficient permissions');
+      }
+
+      const classLabel = await this.classLabelRepository.findOne({
+        where: { id: classLabelId, project: { id: projectId } },
+      });
+
+      if (!classLabel) {
+        throw new NotFoundException('Class label not found');
+      }
+
+      Object.assign(classLabel, updateClassLabelDto);
+
+      const updatedClassLabel = await this.classLabelRepository.save(
+        classLabel,
+      );
+
+      return updatedClassLabel;
+    } catch (error) {
+      console.error('Error updating classLabel:', error);
+      throw new Error('Failed to update classLabel');
+    }
+  }
 }
