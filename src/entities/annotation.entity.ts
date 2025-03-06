@@ -2,6 +2,7 @@ import {
   BaseEntity,
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -18,6 +19,11 @@ export enum LabelType {
   MASK = 'MASK',
 }
 
+export type Bbox = [number, number, number, number];
+export type Mask = number[];
+export type Point = [number, number];
+export type Polygon = Point[];
+
 @Entity()
 export class Annotation extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -29,27 +35,37 @@ export class Annotation extends BaseEntity {
   @Column({ type: 'enum', enum: LabelType, default: LabelType.BBOX })
   labelType: LabelType;
 
-  @Column('jsonb', { comment: '라벨링 데이터 (bounding box 등)' })
-  data: any;
+  @Column('jsonb', { nullable: true })
+  bbox: Bbox | null;
+
+  @Column('jsonb', { nullable: true })
+  mask: Mask | null;
+
+  @Column('jsonb', { nullable: true })
+  polygon: Polygon | null;
 
   @ManyToOne(() => DataItem, (dataItem) => dataItem.annotations, {
-    onDelete: 'CASCADE',
+    nullable: true,
+    onDelete: 'SET NULL',
   })
   dataItem: DataItem;
 
   @Column({ comment: 'z-index' })
   zIndex: number;
 
-  @ManyToOne(() => ClassLabel, (classLabel) => classLabel.annotations, {
-    onDelete: 'CASCADE',
-  })
+  @ManyToOne(() => ClassLabel, (classLabel) => classLabel.annotations)
   classLabel: ClassLabel;
 
   @ManyToOne(() => WorkspaceMember, (member) => member.annotations, {
-    nullable: false,
-    onDelete: 'CASCADE',
+    nullable: true,
   })
   createdBy: WorkspaceMember;
+
+  @Column({ default: false })
+  isDeleted: boolean;
+
+  @DeleteDateColumn()
+  deletedAt: Date;
 
   @CreateDateColumn({ comment: '생성일' })
   createdAt: Date;

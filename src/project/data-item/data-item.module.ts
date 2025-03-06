@@ -9,6 +9,7 @@ import { WorkspaceMember } from 'src/entities/workspace-member.entity';
 import { Dataset } from 'src/entities/dataset.entity';
 import { DataItem } from 'src/entities/data-item.entity';
 import { AuthModule } from 'src/auth/auth.module';
+import { Annotation } from 'src/entities/annotation.entity';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AuthModule } from 'src/auth/auth.module';
       WorkspaceMember,
       Dataset,
       DataItem,
+      Annotation,
     ]),
     AuthModule,
   ],

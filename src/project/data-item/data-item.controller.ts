@@ -84,4 +84,25 @@ export class DataItemController {
       data: dataItem,
     };
   }
+
+  @Get(':itemId/labels')
+  async getDataItemLabels(
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('itemId') itemId: string,
+    @CurrentUser() user: User,
+  ) {
+    const labels = await this.dataItemService.getDataItemLabels(
+      workspaceId,
+      projectId,
+      itemId,
+      user,
+    );
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'labels retrieved successfully',
+      data: labels,
+    };
+  }
 }

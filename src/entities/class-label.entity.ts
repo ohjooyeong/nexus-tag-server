@@ -39,7 +39,6 @@ export class ClassLabel extends BaseEntity {
   project: Project;
 
   @OneToMany(() => Annotation, (annotation) => annotation.classLabel, {
-    cascade: true,
     nullable: true,
   })
   annotations?: Annotation[];

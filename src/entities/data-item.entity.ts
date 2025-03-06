@@ -59,7 +59,6 @@ export class DataItem extends BaseEntity {
   dataset: Dataset;
 
   @OneToMany(() => Annotation, (annotation) => annotation.dataItem, {
-    cascade: true,
     nullable: true,
   })
   annotations?: Annotation[];

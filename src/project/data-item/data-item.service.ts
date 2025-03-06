@@ -6,6 +6,7 @@ import { User } from 'src/entities/user.entity';
 import { WorkspaceMember } from 'src/entities/workspace-member.entity';
 import { Repository, In } from 'typeorm';
 import * as fs from 'fs';
+import { Annotation } from 'src/entities/annotation.entity';
 
 @Injectable()
 export class DataItemService {
@@ -16,6 +17,8 @@ export class DataItemService {
     private readonly workspaceMemberRepository: Repository<WorkspaceMember>,
     @InjectRepository(DataItem)
     private readonly dataItemRepository: Repository<DataItem>,
+    @InjectRepository(Annotation)
+    private readonly annotationRepository: Repository<Annotation>,
   ) {}
 
   async getDataItem(
@@ -166,6 +169,40 @@ export class DataItemService {
     } catch (error) {
       console.error('Error deleting data items:', error);
       throw new Error('Failed to delete data items');
+    }
+  }
+
+  async getDataItemLabels(
+    workspaceId: string,
+    projectId: string,
+    itemId: string,
+    user: User,
+  ) {
+    try {
+      const workspaceMember = await this.workspaceMemberRepository.findOne({
+        where: { user: { id: user.id }, workspace: { id: workspaceId } },
+      });
+
+      if (!workspaceMember) {
+        throw new NotFoundException('Workspace member not found');
+      }
+
+      const annotations = await this.annotationRepository.find({
+        where: {
+          dataItem: { id: itemId },
+        },
+        relations: ['classLabel'],
+      });
+
+      return annotations.map((annotation) => {
+        return {
+          ...annotation,
+          classId: annotation.classLabel.id,
+        };
+      });
+    } catch (error) {
+      console.error('Error getting data item labels:', error);
+      throw new Error('Failed to get data item labels');
     }
   }
 }
