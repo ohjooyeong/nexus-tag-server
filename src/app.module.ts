@@ -24,6 +24,7 @@ import { Dataset } from './entities/dataset.entity';
 import { DatasetModule } from './project/dataset/dataset.module';
 import { DataItemModule } from './project/data-item/data-item.module';
 import { ClassLabelModule } from './project/class-label/class-label.module';
+import { DashboardModule } from './project/dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { ClassLabelModule } from './project/class-label/class-label.module';
     DatasetModule,
     DataItemModule,
     ClassLabelModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],
