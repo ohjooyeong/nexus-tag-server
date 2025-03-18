@@ -20,7 +20,7 @@ services:
   nexus-tag-server:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     container_name: nexus-tag-server
     env_file:
       - .env

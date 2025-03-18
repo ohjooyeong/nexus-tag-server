@@ -36,6 +36,6 @@ lerna-debug.log*
 
 postgres
 
-.env
+.env*
 
 /uploads
