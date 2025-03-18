@@ -36,9 +36,9 @@ import { DashboardModule } from './project/dashboard/dashboard.module';
       type: 'postgres',
       host: 'postgres',
       port: 5432,
-      username: 'postgres',
-      password: 'postgres',
-      database: 'postgres',
+      username: process.env.POSTGRES_USER,
+      password: process.env.POSTGRES_PASSWORD,
+      database: process.env.POSTGRES_DB,
       synchronize: true, // production 때는 false
       entities: [
         Workspace,
