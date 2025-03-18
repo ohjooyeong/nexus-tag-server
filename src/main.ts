@@ -5,6 +5,9 @@ import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import * as express from 'express';
 import { join } from 'path';
+import * as dotenv from 'dotenv';
+
+dotenv.config({ path: '.env' });
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -19,13 +22,13 @@ async function bootstrap() {
       },
     }),
   );
-  // 정적 파일 제공 설정
 
   app.enableCors({
     origin: ['http://localhost:3000', 'https://nexus-tag.vercel.app'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true, // 쿠키 전송 허용
   });
+
   // Static 파일 서빙 설정
   app.use(
     '/uploads',
@@ -40,6 +43,6 @@ async function bootstrap() {
     },
     express.static(join(process.cwd(), 'uploads')),
   );
-  await app.listen(8080);
+  await app.listen(process.env.PORT);
 }
 bootstrap();
