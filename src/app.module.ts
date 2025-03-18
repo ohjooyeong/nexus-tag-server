@@ -11,7 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { User } from './entities/user.entity';
 import { ProfileModule } from './profile/profile.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Profile } from './entities/profile.entity';
 import { WorkspaceMember } from './entities/workspace-member.entity';
 import { MailModule } from './mail/mail.module';
@@ -32,26 +32,30 @@ import { DashboardModule } from './project/dashboard/dashboard.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'postgres',
-      port: 5432,
-      username: process.env.POSTGRES_USER,
-      password: process.env.POSTGRES_PASSWORD,
-      database: process.env.POSTGRES_DB,
-      synchronize: true, // production 때는 false
-      entities: [
-        Workspace,
-        Project,
-        User,
-        Profile,
-        WorkspaceMember,
-        EmailVerification,
-        Annotation,
-        ClassLabel,
-        DataItem,
-        Dataset,
-      ],
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: 'postgres',
+        port: 5432,
+        username: configService.get('POSTGRES_USER'),
+        password: configService.get('POSTGRES_PASSWORD'),
+        database: configService.get('POSTGRES_DB'),
+        synchronize: true, // production 때는 false
+        entities: [
+          Workspace,
+          Project,
+          User,
+          Profile,
+          WorkspaceMember,
+          EmailVerification,
+          Annotation,
+          ClassLabel,
+          DataItem,
+          Dataset,
+        ],
+      }),
+      inject: [ConfigService],
     }),
 
     WorkspaceModule,
