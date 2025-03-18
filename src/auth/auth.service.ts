@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  HttpException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -13,7 +14,6 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { RegisterDto } from './dto/register.dto';
 import { ConfigService } from '@nestjs/config';
-import { Response } from 'express';
 import { GetUserDto } from './dto/get-user.dto';
 import { instanceToPlain } from 'class-transformer';
 
@@ -63,11 +63,16 @@ export class AuthService {
     }
   }
 
-  async login(user: User, response: Response) {
+  async login(user: User) {
     if (!user.isEmailVerified) {
-      await this.sendEmailVerification(user, 'en'); // 기본 언어는 영어로 설정
-      throw new UnauthorizedException(
-        'Email is not verified. A verification email has been sent. Please verify your email before logging in.',
+      await this.sendEmailVerification(user, 'en');
+      throw new HttpException(
+        {
+          status: 450,
+          message:
+            'Email is not verified. A verification email has been sent. Please verify your email before logging in.',
+        },
+        450,
       );
     }
 
@@ -79,21 +84,16 @@ export class AuthService {
       this.configService.get('JWT_EXPIRATION'),
     );
 
-    const expires = new Date();
-    expires.setSeconds(expires.getSeconds() + expirationInSeconds);
+    const expiresAt = new Date();
+    expiresAt.setSeconds(expiresAt.getSeconds() + expirationInSeconds);
 
     const token = this.jwtService.sign(tokenPayload);
 
-    response.cookie('Authentication', token, {
-      httpOnly: true,
-      expires,
-      sameSite: 'none', // 크로스 사이트 요청 허용
-      secure: process.env.NODE_ENV === 'production' ? true : false, // HTTPS 필수
-      domain:
-        process.env.NODE_ENV === 'production' ? 'vercel.app' : 'localhost',
-    });
-
-    return { access_token: token };
+    return {
+      access_token: token,
+      expires_at: expiresAt.getTime(), // Unix timestamp로 변환
+      expires_in: expirationInSeconds,
+    };
   }
 
   async register(registerDto: RegisterDto) {
@@ -245,8 +245,8 @@ export class AuthService {
     await this.emailVerificationService.verifyToken(token);
   }
 
-  async logout(response: Response): Promise<void> {
-    response.clearCookie('Authentication', { httpOnly: true });
+  async logout() {
+    // 클라이언트에서 토큰을 제거하므로 서버에서는 특별한 처리가 필요 없음
   }
 
   async getUser(getUserDto: GetUserDto) {

@@ -6,7 +6,6 @@ import {
   HttpStatus,
   Post,
   Req,
-  Res,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
@@ -15,7 +14,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LocalAuthGuard } from './guard/local.guard';
 import { CurrentUser } from './current-user.decorator';
 import { User } from 'src/entities/user.entity';
-import { Response, Request } from 'express';
+import { Request } from 'express';
 import { JwtAuthGuard } from './guard/jwt.guard';
 
 @Controller('auth')
@@ -24,21 +23,18 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  async login(
-    @CurrentUser() user: User,
-    @Res({ passthrough: true }) response: Response,
-  ) {
-    const result = await this.authService.login(user, response);
-    return response.status(200).json({
+  async login(@CurrentUser() user: User) {
+    const result = await this.authService.login(user);
+    return {
       statusCode: 200,
       message: 'Login Successfully',
       data: result,
-    });
+    };
   }
 
   @Post('logout')
-  async logout(@Res({ passthrough: true }) response: Response) {
-    await this.authService.logout(response);
+  async logout() {
+    await this.authService.logout();
     return {
       statusCode: HttpStatus.OK,
       message: 'Successfully logged out',
@@ -74,15 +70,17 @@ export class AuthController {
 
   @Get('status')
   async getStatus(@Req() request: Request) {
-    const token = request.cookies?.Authentication;
+    const authHeader = request.headers.authorization;
 
-    if (!token) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return {
         statusCode: HttpStatus.OK,
         message: 'loggedIn false',
         data: { loggedIn: false },
       };
     }
+
+    const token = authHeader.split(' ')[1];
 
     try {
       const user = await this.authService.validateToken(token);
