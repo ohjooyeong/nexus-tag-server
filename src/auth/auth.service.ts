@@ -218,10 +218,10 @@ export class AuthService {
 
   async sendEmailVerification(user: User, language: string): Promise<void> {
     const token = await this.emailVerificationService.generateToken(user);
-    const verificationLink = `http://localhost:3000/email-verify?token=${token}`;
+    const clientDomain = this.configService.get('CLIENT_DOMAIN');
+    const verificationLink = `${clientDomain}/email-verify?token=${token}`;
     const template = emailTemplates[language] || emailTemplates.en;
 
-    // Send email using an email service (e.g., SendGrid, Nodemailer)
     await this.mailService.sendEmail(
       user.email,
       template.subject,

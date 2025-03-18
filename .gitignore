@@ -1,6 +1,7 @@
 # compiled output
 /dist
 /node_modules
+docker-compose.prod.yml
 
 # Logs
 logs
@@ -36,6 +37,7 @@ lerna-debug.log*
 
 postgres
 
+docker-compose*
 .env*
 
 /uploads
