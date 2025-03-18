@@ -87,6 +87,10 @@ export class AuthService {
     response.cookie('Authentication', token, {
       httpOnly: true,
       expires,
+      sameSite: 'none', // 크로스 사이트 요청 허용
+      secure: process.env.NODE_ENV === 'production' ? true : false, // HTTPS 필수
+      domain:
+        process.env.NODE_ENV === 'production' ? 'vercel.app' : 'localhost',
     });
 
     return { access_token: token };
