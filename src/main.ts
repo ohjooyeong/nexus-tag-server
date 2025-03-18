@@ -6,11 +6,24 @@ import * as cookieParser from 'cookie-parser';
 import * as express from 'express';
 import { join } from 'path';
 import * as dotenv from 'dotenv';
+import * as fs from 'fs';
 
 dotenv.config({ path: '.env' });
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // HTTPS 인증서 옵션 추가
+  let app;
+
+  if (process.env.NODE_ENV === 'production') {
+    const httpsOptions = {
+      key: fs.readFileSync('/app/ssl/key.pem'),
+      cert: fs.readFileSync('/app/ssl/cert.pem'),
+    };
+    app = await NestFactory.create(AppModule, { httpsOptions });
+  } else {
+    app = await NestFactory.create(AppModule);
+  }
+
   app.use(cookieParser());
   app.useLogger(app.get(Logger));
   app.useGlobalPipes(
