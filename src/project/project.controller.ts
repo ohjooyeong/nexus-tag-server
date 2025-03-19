@@ -9,6 +9,7 @@ import {
   Query,
   HttpStatus,
   UseGuards,
+  Put,
 } from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -29,6 +30,28 @@ export class ProjectController {
   ) {
     const project = await this.projectService.createProject(
       { ...createProjectDto, workspaceId },
+      user,
+    );
+    return {
+      statusCode: HttpStatus.CREATED,
+      message: 'Project created successfully',
+      data: project,
+    };
+  }
+
+  @Put(':projectId')
+  async updateProject(
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: User,
+    @Body()
+    updateProjectDto: {
+      name: string;
+      description: string;
+    },
+  ) {
+    const project = await this.projectService.updateProject(
+      projectId,
+      { ...updateProjectDto },
       user,
     );
     return {
@@ -69,6 +92,19 @@ export class ProjectController {
       statusCode: HttpStatus.OK,
       message: 'Project info found successfully',
       data: project,
+    };
+  }
+
+  @Delete(':projectId')
+  async deleteProject(
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: User,
+  ) {
+    await this.projectService.deleteProject(projectId, user);
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Project deleted successfully',
     };
   }
 }
