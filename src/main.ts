@@ -38,19 +38,24 @@ async function bootstrap() {
 
   app.enableCors({
     origin: ['http://localhost:3000', 'https://nexus-tag.vercel.app'],
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true, // 쿠키 전송 허용
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
-  // Static 파일 서빙 설정
+  // Static 파일 서빙 설정 수정
   app.use(
     '/uploads',
     (req, res, next) => {
-      res.header(
-        'Access-Control-Allow-Origin',
-        'http://localhost:3000',
-        'https://nexus-tag.vercel.app',
-      );
+      const origin = req.headers.origin;
+      if (
+        origin &&
+        ['http://localhost:3000', 'https://nexus-tag.vercel.app'].includes(
+          origin,
+        )
+      ) {
+        res.header('Access-Control-Allow-Origin', origin);
+      }
       res.header('Access-Control-Allow-Credentials', 'true');
       next();
     },
