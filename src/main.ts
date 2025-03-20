@@ -3,8 +3,6 @@ import { AppModule } from './app.module';
 import { Logger } from 'nestjs-pino';
 import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
-import * as express from 'express';
-import { join } from 'path';
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 
@@ -43,24 +41,6 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
-  // Static 파일 서빙 설정 수정
-  app.use(
-    '/uploads',
-    (req, res, next) => {
-      const origin = req.headers.origin;
-      if (
-        origin &&
-        ['http://localhost:3000', 'https://nexus-tag.vercel.app'].includes(
-          origin,
-        )
-      ) {
-        res.header('Access-Control-Allow-Origin', origin);
-      }
-      res.header('Access-Control-Allow-Credentials', 'true');
-      next();
-    },
-    express.static(join(process.cwd(), 'uploads')),
-  );
   await app.listen(process.env.PORT);
 }
 bootstrap();

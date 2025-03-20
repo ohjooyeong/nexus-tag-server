@@ -7,6 +7,7 @@ import { WorkspaceMember } from 'src/entities/workspace-member.entity';
 import { Repository, In } from 'typeorm';
 import * as fs from 'fs';
 import { Annotation } from 'src/entities/annotation.entity';
+import { AwsS3Service } from 'src/aws/aws-s3.service';
 
 @Injectable()
 export class DataItemService {
@@ -19,6 +20,7 @@ export class DataItemService {
     private readonly dataItemRepository: Repository<DataItem>,
     @InjectRepository(Annotation)
     private readonly annotationRepository: Repository<Annotation>,
+    private readonly awsS3Service: AwsS3Service,
   ) {}
 
   async getDataItem(
@@ -154,8 +156,10 @@ export class DataItemService {
 
       await Promise.all(
         dataItems.map(async (item) => {
-          if (fs.existsSync(item.path)) {
-            fs.unlinkSync(item.path);
+          try {
+            await this.awsS3Service.deleteFile(item.path);
+          } catch (error) {
+            console.error(`Failed to delete S3 file: ${item.path}`, error);
           }
         }),
       );

@@ -5,10 +5,10 @@ import { Dataset } from 'src/entities/dataset.entity';
 import { Project } from 'src/entities/project.entity';
 import { User } from 'src/entities/user.entity';
 import { WorkspaceMember } from 'src/entities/workspace-member.entity';
-import { Repository, In } from 'typeorm';
-import * as fs from 'fs';
-import * as path from 'path';
+import { Repository } from 'typeorm';
+
 import 'multer';
+import { AwsS3Service } from 'src/aws/aws-s3.service';
 
 @Injectable()
 export class DatasetService {
@@ -21,6 +21,7 @@ export class DatasetService {
     private readonly workspaceMemberRepository: Repository<WorkspaceMember>,
     @InjectRepository(DataItem)
     private readonly dataItemRepository: Repository<DataItem>,
+    private readonly awsS3Service: AwsS3Service,
   ) {}
 
   async getDatasets(projectId: string, workspaceId: string, user: User) {
@@ -266,6 +267,7 @@ export class DatasetService {
       throw new Error('Failed to fetch delete dataset');
     }
   }
+
   async uploadDataItem(
     workspaceId: string,
     projectId: string,
@@ -307,52 +309,35 @@ export class DatasetService {
 
       const savedDataItems = await Promise.all(
         files.map(async (file) => {
-          // 이미지 타입 체크
           if (!allowedMimeTypes.includes(file.mimetype)) {
             throw new Error(`Unsupported file type: ${file.mimetype}`);
           }
 
-          // 한글 파일명을 안전하게 처리
           const safeOriginalName = Buffer.from(
             file.originalname,
             'latin1',
           ).toString('utf8');
 
-          // 파일명과 확장자 분리
           const lastDotIndex = safeOriginalName.lastIndexOf('.');
           const nameWithoutExt =
             lastDotIndex !== -1
               ? safeOriginalName.substring(0, lastDotIndex)
               : safeOriginalName;
-          const fileExtension =
-            lastDotIndex !== -1
-              ? safeOriginalName.substring(lastDotIndex + 1)
-              : '';
 
-          const uniqueFilename = `${Date.now()}-${Math.random()
-            .toString(36)
-            .substring(7)}.${fileExtension}`;
-
-          const baseUploadDir = path.join(process.cwd(), 'uploads');
-          const projectDir = path.join(baseUploadDir, projectId);
-          const datasetDir = path.join(projectDir, datasetId);
-          const yearMonth = new Date().toISOString().slice(0, 7);
-          const finalDir = path.join(datasetDir, yearMonth);
-
-          if (!fs.existsSync(finalDir)) {
-            fs.mkdirSync(finalDir, { recursive: true });
-          }
-
-          const filePath = path.join(finalDir, uniqueFilename);
-          fs.writeFileSync(filePath, file.buffer);
+          // S3에 파일 업로드
+          const { key, url } = await this.awsS3Service.uploadFile(
+            file,
+            projectId,
+            datasetId,
+          );
 
           const dataItem = this.dataItemRepository.create({
             dataset,
-            name: nameWithoutExt, // 확장자 제외한 이름
-            filename: uniqueFilename, // 실제 저장되는 파일명
-            originalName: safeOriginalName, // 원본 파일명 (확장자 포함)
-            path: filePath,
-            fileUrl: `/uploads/${projectId}/${datasetId}/${yearMonth}/${uniqueFilename}`,
+            name: nameWithoutExt,
+            filename: key.split('/').pop() || '',
+            originalName: safeOriginalName,
+            path: key,
+            fileUrl: url,
             mimeType: file.mimetype,
             size: file.size,
           });

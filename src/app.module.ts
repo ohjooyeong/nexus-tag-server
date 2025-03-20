@@ -25,6 +25,7 @@ import { DatasetModule } from './project/dataset/dataset.module';
 import { DataItemModule } from './project/data-item/data-item.module';
 import { ClassLabelModule } from './project/class-label/class-label.module';
 import { DashboardModule } from './project/dashboard/dashboard.module';
+import { AwsS3Service } from './aws/aws-s3.service';
 
 @Module({
   imports: [
@@ -71,6 +72,6 @@ import { DashboardModule } from './project/dashboard/dashboard.module';
     DashboardModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, AwsS3Service],
 })
 export class AppModule {}

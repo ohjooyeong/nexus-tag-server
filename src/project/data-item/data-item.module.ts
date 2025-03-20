@@ -10,6 +10,7 @@ import { Dataset } from 'src/entities/dataset.entity';
 import { DataItem } from 'src/entities/data-item.entity';
 import { AuthModule } from 'src/auth/auth.module';
 import { Annotation } from 'src/entities/annotation.entity';
+import { AwsS3Service } from 'src/aws/aws-s3.service';
 
 @Module({
   imports: [
@@ -25,7 +26,7 @@ import { Annotation } from 'src/entities/annotation.entity';
     AuthModule,
   ],
   controllers: [DataItemController],
-  providers: [DataItemService],
+  providers: [DataItemService, AwsS3Service],
   exports: [DataItemService],
 })
 export class DataItemModule {}
