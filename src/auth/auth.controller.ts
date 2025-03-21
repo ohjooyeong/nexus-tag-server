@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Post,
   Req,
+  Res,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
@@ -16,10 +17,15 @@ import { CurrentUser } from './current-user.decorator';
 import { User } from 'src/entities/user.entity';
 import { Request } from 'express';
 import { JwtAuthGuard } from './guard/jwt.guard';
+import { GoogleOauthGuard } from './guard/google-oauth.guard';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
@@ -120,6 +126,29 @@ export class AuthController {
     }
 
     await this.authService.verifyEmail(token);
-    return { message: 'Email successfully verified. You can now log in.' };
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Email successfully verified. You can now log in.',
+      data: null,
+    };
+  }
+
+  @Get('google/callback')
+  @UseGuards(GoogleOauthGuard)
+  async googleAuthCallback(@Req() req, @Res() res) {
+    try {
+      const loginResult = await this.authService.googleLogin(req.user);
+      const clientDomain = this.configService.get('CLIENT_DOMAIN');
+
+      return res.redirect(
+        `${clientDomain}/login/google/callback?` +
+          `token=${loginResult.access_token}` +
+          `&expires_at=${loginResult.expires_at}` +
+          `&expires_in=${loginResult.expires_in}`,
+      );
+    } catch (error) {
+      const clientDomain = this.configService.get('CLIENT_DOMAIN');
+      return res.redirect(`${clientDomain}/login?error=Authentication failed`);
+    }
   }
 }

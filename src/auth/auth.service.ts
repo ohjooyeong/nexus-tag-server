@@ -97,12 +97,14 @@ export class AuthService {
   }
 
   async register(registerDto: RegisterDto) {
-    const existingEmail = await this.userRepository.findOneBy({
+    const existingUser = await this.userRepository.findOneBy({
       email: registerDto.email,
     });
 
-    if (existingEmail) {
-      throw new UnprocessableEntityException('Email already exists');
+    if (existingUser && existingUser.provider === 'google') {
+      throw new UnprocessableEntityException(
+        'This email is already registered with Google. Please use Google Sign-In.',
+      );
     }
 
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
@@ -158,14 +160,78 @@ export class AuthService {
     return instanceToPlain(user);
   }
 
-  private async syncCreateUser(
-    manager,
-    registerDto: RegisterDto,
-    hashedPassword: string,
-  ) {
+  async googleLogin(profile: any) {
+    const existingUser = await this.userRepository.findOne({
+      where: [{ providerId: profile.providerId }, { email: profile.email }],
+      relations: ['defaultWorkspace'],
+    });
+
+    // 기존 사용자일 경우
+    if (existingUser) {
+      if (existingUser.provider === 'local') {
+        // 로컬 계정을 구글 계정으로 전환
+        existingUser.provider = 'google';
+        existingUser.providerId = profile.providerId;
+        existingUser.isEmailVerified = true;
+        await this.userRepository.save(existingUser);
+        return this.login(existingUser);
+      } else if (
+        existingUser.provider === 'google' &&
+        existingUser.providerId !== profile.providerId
+      ) {
+        // 기존 구글 계정의 providerId 업데이트
+        existingUser.providerId = profile.providerId;
+        await this.userRepository.save(existingUser);
+      }
+      const loginResponse = await this.login(existingUser);
+
+      return {
+        ...loginResponse,
+      };
+    }
+
+    // 새 사용자 생성
+    const user = await this.dataSource.transaction(async (manager) => {
+      try {
+        const user = await this.syncCreateUser(
+          manager,
+          {
+            email: profile.email,
+            username: profile.username,
+            password: '', // Google 로그인은 비밀번호 불필요
+            provider: 'google',
+            googleId: profile.googleId,
+            isEmailVerified: true,
+          },
+          '',
+        );
+
+        const workspace = await this.syncCreateDefaultWorkspace(manager, user);
+        const workspaceMember = await this.syncCreateWorkspaceMember(
+          manager,
+          user,
+          workspace,
+        );
+        await this.syncCreateDefaultProject(
+          manager,
+          workspace,
+          workspaceMember,
+        );
+
+        return user;
+      } catch (error) {
+        console.error('Error during Google sign-up:', error);
+        throw new InternalServerErrorException('Failed to create user account');
+      }
+    });
+
+    return this.login(user);
+  }
+
+  private async syncCreateUser(manager, userData: any, hashedPassword: string) {
     try {
       const user = this.userRepository.create({
-        ...registerDto,
+        ...userData,
         password: hashedPassword,
       });
       return await manager.save(user);

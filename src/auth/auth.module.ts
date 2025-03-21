@@ -15,6 +15,7 @@ import { Profile } from 'src/entities/profile.entity';
 import { EmailVerification } from 'src/entities/email-verification.entity';
 import { EmailVerificationModule } from 'src/email-verification/email-verification.module';
 import { MailModule } from 'src/mail/mail.module';
+import { GoogleStrategy } from './strategy/google.strategy';
 
 @Module({
   imports: [
@@ -38,12 +39,13 @@ import { MailModule } from 'src/mail/mail.module';
         signOptions: {
           expiresIn: `${configService.get('JWT_EXPIRATION')}s`,
         },
+        global: true,
       }),
       inject: [ConfigService],
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy],
+  providers: [AuthService, LocalStrategy, JwtStrategy, GoogleStrategy],
   exports: [JwtStrategy],
 })
 export class AuthModule {}

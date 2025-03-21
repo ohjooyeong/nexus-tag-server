@@ -15,10 +15,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { EmailVerification } from './email-verification.entity';
-import { Project } from './project.entity';
-import { Dataset } from './dataset.entity';
-import { DataItem } from './data-item.entity';
-import { Annotation } from './annotation.entity';
 
 @Entity()
 export class User extends BaseEntity {
@@ -41,6 +37,12 @@ export class User extends BaseEntity {
   @Exclude()
   @Column({ type: 'varchar' })
   password: string;
+
+  @Column({ nullable: true })
+  providerId: string;
+
+  @Column({ default: 'local' })
+  provider: string;
 
   @CreateDateColumn({ comment: '생성일' })
   createdAt: Date;
