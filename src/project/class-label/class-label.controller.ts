@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpStatus,
   Param,
@@ -91,6 +92,26 @@ export class ClassLabelController {
       statusCode: HttpStatus.OK,
       message: 'class label updated successfully',
       data: updatedClassLabel,
+    };
+  }
+
+  @Delete(':classLabelId')
+  async deleteClassLabel(
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('classLabelId') classLabelId: string,
+    @CurrentUser() user: User,
+  ) {
+    await this.classLabelService.deleteClassLabel(
+      workspaceId,
+      projectId,
+      classLabelId,
+      user,
+    );
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'class label deleted successfully',
     };
   }
 }

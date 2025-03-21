@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Annotation } from 'src/entities/annotation.entity';
 import { ClassLabel, ClassType } from 'src/entities/class-label.entity';
 import { User } from 'src/entities/user.entity';
 import { WorkspaceMember } from 'src/entities/workspace-member.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 
 @Injectable()
 export class ClassLabelService {
@@ -12,6 +13,8 @@ export class ClassLabelService {
     private readonly classLabelRepository: Repository<ClassLabel>,
     @InjectRepository(WorkspaceMember)
     private readonly workspaceMemberRepository: Repository<WorkspaceMember>,
+
+    private readonly dataSource: DataSource,
   ) {}
 
   async getClassLabels(workspaceId: string, projectId: string, user: User) {
@@ -126,6 +129,50 @@ export class ClassLabelService {
     } catch (error) {
       console.error('Error updating classLabel:', error);
       throw new Error('Failed to update classLabel');
+    }
+  }
+
+  async deleteClassLabel(
+    workspaceId: string,
+    projectId: string,
+    classLabelId: string,
+    user: User,
+  ) {
+    try {
+      const workspaceMember = await this.workspaceMemberRepository.findOne({
+        where: { user: { id: user.id }, workspace: { id: workspaceId } },
+      });
+
+      if (!workspaceMember) {
+        throw new NotFoundException('Workspace member not found');
+      }
+
+      if (!['OWNER', 'MANAGER'].includes(workspaceMember.role)) {
+        throw new NotFoundException('Insufficient permissions');
+      }
+
+      const classLabel = await this.classLabelRepository.findOne({
+        where: { id: classLabelId, project: { id: projectId } },
+      });
+
+      if (!classLabel) {
+        throw new NotFoundException('Class label not found');
+      }
+
+      await this.dataSource.transaction(async (manager) => {
+        await manager.getRepository(Annotation).update(
+          { classLabel: { id: classLabelId } },
+          {
+            isDeleted: true,
+            deletedAt: new Date(),
+          },
+        );
+
+        await manager.remove(ClassLabel, classLabel);
+      });
+    } catch (error) {
+      console.error('Error deleting classLabel:', error);
+      throw new Error('Failed to delete classLabel');
     }
   }
 }

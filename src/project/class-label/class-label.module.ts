@@ -12,6 +12,7 @@ import { ClassLabel } from 'src/entities/class-label.entity';
 import { DataItem } from 'src/entities/data-item.entity';
 import { ClassLabelController } from './class-label.controller';
 import { ClassLabelService } from './class-label.service';
+import { Annotation } from 'src/entities/annotation.entity';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { ClassLabelService } from './class-label.service';
       Dataset,
       ClassLabel,
       DataItem,
+      Annotation,
     ]),
     AuthModule,
   ],
