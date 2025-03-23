@@ -175,38 +175,4 @@ export class DataItemService {
       throw new Error('Failed to delete data items');
     }
   }
-
-  async getDataItemLabels(
-    workspaceId: string,
-    projectId: string,
-    itemId: string,
-    user: User,
-  ) {
-    try {
-      const workspaceMember = await this.workspaceMemberRepository.findOne({
-        where: { user: { id: user.id }, workspace: { id: workspaceId } },
-      });
-
-      if (!workspaceMember) {
-        throw new NotFoundException('Workspace member not found');
-      }
-
-      const annotations = await this.annotationRepository.find({
-        where: {
-          dataItem: { id: itemId },
-        },
-        relations: ['classLabel'],
-      });
-
-      return annotations.map((annotation) => {
-        return {
-          ...annotation,
-          classId: annotation.classLabel.id,
-        };
-      });
-    } catch (error) {
-      console.error('Error getting data item labels:', error);
-      throw new Error('Failed to get data item labels');
-    }
-  }
 }

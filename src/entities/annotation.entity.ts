@@ -5,7 +5,6 @@ import {
   DeleteDateColumn,
   Entity,
   ManyToOne,
-  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { DataItem } from './data-item.entity';
@@ -26,10 +25,10 @@ export type Polygon = Point[];
 
 @Entity()
 export class Annotation extends BaseEntity {
-  @PrimaryGeneratedColumn('uuid')
+  @Column({ primary: true })
   id: string;
 
-  @Column({ comment: '클라이언트에서 생성한 id', nullable: true })
+  @Column({ comment: '클라이언트에서 두번째 id', nullable: true })
   clientId: string;
 
   @Column({ type: 'enum', enum: LabelType, default: LabelType.BBOX })

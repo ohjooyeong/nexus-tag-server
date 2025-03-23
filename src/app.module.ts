@@ -26,6 +26,7 @@ import { DataItemModule } from './project/data-item/data-item.module';
 import { ClassLabelModule } from './project/class-label/class-label.module';
 import { DashboardModule } from './project/dashboard/dashboard.module';
 import { AwsS3Service } from './aws/aws-s3.service';
+import { AnnotationModule } from './project/annotation/annotation.module';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { AwsS3Service } from './aws/aws-s3.service';
     DataItemModule,
     ClassLabelModule,
     DashboardModule,
+    AnnotationModule,
   ],
   controllers: [AppController],
   providers: [AppService, AwsS3Service],
