@@ -84,4 +84,25 @@ export class DataItemController {
       data: dataItem,
     };
   }
+
+  @Get(':itemId/navigation')
+  async getDataItemDetailInfo(
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('itemId') itemId: string,
+    @CurrentUser() user: User,
+  ) {
+    const dataItems = await this.dataItemService.getDataItemNavigation(
+      workspaceId,
+      projectId,
+      itemId,
+      user,
+    );
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Data item detail information retrieved successfully',
+      data: dataItems,
+    };
+  }
 }

@@ -18,8 +18,6 @@ export class DataItemService {
     private readonly workspaceMemberRepository: Repository<WorkspaceMember>,
     @InjectRepository(DataItem)
     private readonly dataItemRepository: Repository<DataItem>,
-    @InjectRepository(Annotation)
-    private readonly annotationRepository: Repository<Annotation>,
     private readonly awsS3Service: AwsS3Service,
   ) {}
 
@@ -65,6 +63,77 @@ export class DataItemService {
       }
 
       return dataItem;
+    } catch (error) {
+      console.error('Error getting data item:', error);
+      throw new Error('Failed to get data item');
+    }
+  }
+
+  async getDataItemNavigation(
+    workspaceId: string,
+    projectId: string,
+    itemId: string,
+    user: User,
+  ) {
+    try {
+      const workspaceMember = await this.workspaceMemberRepository.findOne({
+        where: { user: { id: user.id }, workspace: { id: workspaceId } },
+      });
+
+      if (!workspaceMember) {
+        throw new NotFoundException('Workspace member not found');
+      }
+
+      const project = await this.projectRepository.findOne({
+        where: { id: projectId },
+        relations: ['workspace'],
+      });
+
+      if (!project) {
+        throw new NotFoundException('Project not found');
+      }
+
+      if (project.workspace.id !== workspaceId) {
+        throw new NotFoundException(
+          'Project does not belong to this workspace',
+        );
+      }
+
+      const allDataItems = await this.dataItemRepository.find({
+        where: {
+          dataset: {
+            project: { id: projectId },
+          },
+        },
+        order: { createdAt: 'ASC' },
+        relations: ['dataset', 'dataset.project'],
+      });
+
+      const currentIndex = allDataItems.findIndex((item) => item.id === itemId);
+      if (currentIndex === -1) {
+        throw new NotFoundException('Data item not found');
+      }
+
+      const totalItems = allDataItems.length;
+      const currentPage = currentIndex + 1;
+      const previousId =
+        currentIndex > 0 ? allDataItems[currentIndex - 1].id : null;
+      const nextId =
+        currentIndex < totalItems - 1
+          ? allDataItems[currentIndex + 1].id
+          : null;
+
+      const dataItem = allDataItems[currentIndex];
+
+      return {
+        item: dataItem,
+        navigation: {
+          totalItems,
+          currentPage,
+          previousId,
+          nextId,
+        },
+      };
     } catch (error) {
       console.error('Error getting data item:', error);
       throw new Error('Failed to get data item');
