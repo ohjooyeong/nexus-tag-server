@@ -163,6 +163,7 @@ export class ClassLabelService {
         await manager.getRepository(Annotation).update(
           { classLabel: { id: classLabelId } },
           {
+            classLabel: null,
             isDeleted: true,
             deletedAt: new Date(),
           },

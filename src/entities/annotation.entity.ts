@@ -52,7 +52,10 @@ export class Annotation extends BaseEntity {
   @Column({ comment: 'z-index' })
   zIndex: number;
 
-  @ManyToOne(() => ClassLabel, (classLabel) => classLabel.annotations)
+  @ManyToOne(() => ClassLabel, (classLabel) => classLabel.annotations, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   classLabel: ClassLabel;
 
   @ManyToOne(() => WorkspaceMember, (member) => member.annotations, {
