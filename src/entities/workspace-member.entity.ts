@@ -12,7 +12,6 @@ import {
 import { Workspace } from './workspace.entity';
 import { User } from 'src/entities/user.entity';
 import { Project } from './project.entity';
-import { DataItem } from './data-item.entity';
 import { Annotation } from './annotation.entity';
 
 export enum Role {

@@ -8,12 +8,14 @@ import {
   Param,
   UseGuards,
   HttpStatus,
+  Patch,
 } from '@nestjs/common';
 import { DataItemService } from './data-item.service';
 
 import { JwtAuthGuard } from 'src/auth/guard/jwt.guard';
 import { CurrentUser } from 'src/auth/current-user.decorator';
 import { User } from 'src/entities/user.entity';
+import { Status } from 'src/entities/data-item.entity';
 
 @Controller('/workspaces/:workspaceId/projects/:projectId/items')
 @UseGuards(JwtAuthGuard)
@@ -103,6 +105,29 @@ export class DataItemController {
       statusCode: HttpStatus.OK,
       message: 'Data item detail information retrieved successfully',
       data: dataItems,
+    };
+  }
+
+  @Patch(':itemId/status')
+  async updateDataItemStatus(
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('itemId') itemId: string,
+    @Body('status') status: Status,
+    @CurrentUser() user: User,
+  ) {
+    const updatedDataItem = await this.dataItemService.updateDataItemStatus(
+      workspaceId,
+      projectId,
+      itemId,
+      status,
+      user,
+    );
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Data item status updated successfully',
+      data: updatedDataItem,
     };
   }
 }

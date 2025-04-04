@@ -1,12 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataItem } from 'src/entities/data-item.entity';
+import { DataItem, Status } from 'src/entities/data-item.entity';
 import { Project } from 'src/entities/project.entity';
 import { User } from 'src/entities/user.entity';
 import { WorkspaceMember } from 'src/entities/workspace-member.entity';
 import { Repository, In } from 'typeorm';
-import * as fs from 'fs';
-import { Annotation } from 'src/entities/annotation.entity';
 import { AwsS3Service } from 'src/aws/aws-s3.service';
 
 @Injectable()
@@ -242,6 +240,46 @@ export class DataItemService {
     } catch (error) {
       console.error('Error deleting data items:', error);
       throw new Error('Failed to delete data items');
+    }
+  }
+
+  async updateDataItemStatus(
+    workspaceId: string,
+    projectId: string,
+    dataItemId: string,
+    status: Status,
+    user: User,
+  ) {
+    try {
+      const workspaceMember = await this.workspaceMemberRepository.findOne({
+        where: { user: { id: user.id }, workspace: { id: workspaceId } },
+      });
+
+      if (!workspaceMember) {
+        throw new NotFoundException('Workspace member not found');
+      }
+
+      const dataItem = await this.dataItemRepository.findOne({
+        where: { id: dataItemId },
+        relations: ['dataset', 'dataset.project'],
+      });
+
+      if (!dataItem) {
+        throw new NotFoundException('Data item not found');
+      }
+
+      if (dataItem.dataset.project.id !== projectId) {
+        throw new NotFoundException(
+          'Data item does not belong to this project',
+        );
+      }
+
+      dataItem.status = status;
+      const updatedDataItem = await this.dataItemRepository.save(dataItem);
+      return updatedDataItem;
+    } catch (error) {
+      console.error('Error updating data item status:', error);
+      throw error;
     }
   }
 }
