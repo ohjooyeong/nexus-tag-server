@@ -36,4 +36,19 @@ export class DashboardController {
       data: info,
     };
   }
+
+  @Get('/statistics')
+  async getProjectStatistics(
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: User,
+  ) {
+    const statistics = await this.dashboardService.getProjectStatistics(
+      projectId,
+    );
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Project statistics retrieved successfully',
+      data: statistics,
+    };
+  }
 }

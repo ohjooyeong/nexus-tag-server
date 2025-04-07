@@ -140,4 +140,70 @@ export class DashboardService {
       throw new Error('Failed to fetch project details');
     }
   }
+
+  async getProjectStatistics(projectId: string) {
+    try {
+      // 데이터셋별 아이템 통계
+      const datasetStats = await this.datasetRepository
+        .createQueryBuilder('dataset')
+        .select('dataset.name', 'datasetName')
+        .addSelect('COUNT(dataItem.id)', 'totalItems')
+        .leftJoin('dataset.dataItems', 'dataItem')
+        .where('dataset.project.id = :projectId', { projectId })
+        .groupBy('dataset.id')
+        .getRawMany();
+
+      // 상태별 통계
+      const statusDistribution = await this.dataItemRepository
+        .createQueryBuilder('dataItem')
+        .select('dataItem.status', 'status')
+        .addSelect('COUNT(*)', 'count')
+        .innerJoin('dataItem.dataset', 'dataset')
+        .where('dataset.project.id = :projectId', { projectId })
+        .groupBy('dataItem.status')
+        .getRawMany();
+
+      // 일별 작업 현황 (최근 7일)
+      const dailyProgress = await this.dataItemRepository
+        .createQueryBuilder('dataItem')
+        .select('DATE(dataItem.updatedAt)', 'date')
+        .addSelect('dataItem.status', 'status')
+        .addSelect('COUNT(*)', 'count')
+        .innerJoin('dataItem.dataset', 'dataset')
+        .where('dataset.project.id = :projectId', { projectId })
+        .andWhere('dataItem.updatedAt >= :startDate', {
+          startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+        })
+        .groupBy('DATE(dataItem.updatedAt)')
+        .addGroupBy('dataItem.status')
+        .orderBy('date', 'DESC')
+        .getRawMany();
+
+      // 데이터셋별 상태 분포
+      const datasetStatusDistribution = await this.dataItemRepository
+        .createQueryBuilder('dataItem')
+        .select('dataset.name', 'datasetName')
+        .addSelect('dataItem.status', 'status')
+        .addSelect('COUNT(*)', 'count')
+        .innerJoin('dataItem.dataset', 'dataset')
+        .where('dataset.project.id = :projectId', { projectId })
+        .groupBy('dataset.name')
+        .addGroupBy('dataItem.status')
+        .getRawMany();
+
+      return {
+        summary: {
+          datasetStats,
+          statusDistribution,
+        },
+        progress: {
+          dailyProgress,
+          datasetStatusDistribution,
+        },
+      };
+    } catch (error) {
+      console.error('Error getting project graph data:', error);
+      throw new Error('Failed to fetch project graph data');
+    }
+  }
 }
