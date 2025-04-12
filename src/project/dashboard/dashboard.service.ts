@@ -176,7 +176,7 @@ export class DashboardService {
         })
         .groupBy('DATE(dataItem.updatedAt)')
         .addGroupBy('dataItem.status')
-        .orderBy('date', 'DESC')
+        .orderBy('date', 'ASC')
         .getRawMany();
 
       // 데이터셋별 상태 분포
